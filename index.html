@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Professional Web Developer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'gradient': 'gradient 8s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        gradient: {
+                            '0%, 100%': { 'background-size': '200% 200%', 'background-position': 'left center' },
+                            '50%': { 'background-size': '200% 200%', 'background-position': 'right center' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    },
+                    colors: {
+                        'neon-blue': '#00D4FF',
+                        'neon-purple': '#8B5CF6',
+                        'neon-pink': '#F472B6',
+                        'dark-bg': '#0F0F23',
+                        'dark-card': '#1A1B3A',
+                        'dark-border': '#2D3748',
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark .glassmorphism {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #00D4FF, #8B5CF6, #F472B6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(45deg, #00D4FF, #8B5CF6, #F472B6);
+            background-size: 200% 200%;
+            animation: gradient 8s ease infinite;
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .hover-glow:hover {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+            transform: translateY(-5px);
+        }
+        
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Particle animation */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        /* Loading animation */
+        .loading-dots {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .loading-dots div {
+            position: absolute;
+            top: 33px;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #8B5CF6;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .loading-dots div:nth-child(1) {
+            left: 8px;
+            animation: loading1 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(2) {
+            left: 8px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(3) {
+            left: 32px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading-dots div:nth-child(4) {
+            left: 56px;
+            animation: loading3 0.6s infinite;
+        }
+        
+        @keyframes loading1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes loading3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+        
+        @keyframes loading2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(24px, 0); }
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-dark-bg text-gray-800 dark:text-white transition-all duration-500 scroll-smooth">
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-dark-bg z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="loading-dots">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <p class="mt-4 text-lg font-medium gradient-text">Loading Portfolio...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-40 glassmorphism">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Desktop Menu -->
+                <div class="hidden md:block flex-1">
+                    <div class="flex items-baseline justify-center space-x-8">
+                        <a href="#home" class="nav-link">Home</a>
+                        <a href="#about" class="nav-link">About</a>
+                        <a href="#skills" class="nav-link">Skills</a>
+                        <a href="#education" class="nav-link">Education</a>
+                        <a href="#projects" class="nav-link">Projects</a>
+                        <a href="#certificates" class="nav-link">Certificates</a>
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </div>
+                </div>
+                
+                <!-- Theme Toggle -->
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+                        <i class="fas fa-moon text-blue-400 hidden dark:block"></i>
+                    </button>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden glassmorphism">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#home" class="block px-3 py-2 rounded-md nav-link">Home</a>
+                <a href="#about" class="block px-3 py-2 rounded-md nav-link">About</a>
+                <a href="#skills" class="block px-3 py-2 rounded-md nav-link">Skills</a>
+                <a href="#education" class="block px-3 py-2 rounded-md nav-link">Education</a>
+                <a href="#projects" class="block px-3 py-2 rounded-md nav-link">Projects</a>
+                <a href="#certificates" class="block px-3 py-2 rounded-md nav-link">Certificates</a>
+                <a href="#contact" class="block px-3 py-2 rounded-md nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden hero-bg pt-20">
+        <!-- Particles Background -->
+        <div class="particles">
+            <div class="particle" style="left: 10%; top: 20%; width: 4px; height: 4px; animation-delay: 0s;"></div>
+            <div class="particle" style="left: 20%; top: 80%; width: 6px; height: 6px; animation-delay: 1s;"></div>
+            <div class="particle" style="left: 60%; top: 30%; width: 3px; height: 3px; animation-delay: 2s;"></div>
+            <div class="particle" style="left: 80%; top: 70%; width: 5px; height: 5px; animation-delay: 3s;"></div>
+            <div class="particle" style="left: 30%; top: 10%; width: 4px; height: 4px; animation-delay: 4s;"></div>
+            <div class="particle" style="left: 70%; top: 90%; width: 3px; height: 3px; animation-delay: 5s;"></div>
+            <div class="particle" style="left: 90%; top: 40%; width: 5px; height: 5px; animation-delay: 6s;"></div>
+        </div>
+        
+        <div class="text-center z-10 px-4" data-aos="fade-up">
+            <!-- Profile Image -->
+            <div class="mb-8">
+                <div class="profile-container w-64 h-64 mx-auto rounded-full gradient-bg p-1.5 shadow-2xl">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center text-6xl font-bold text-white overflow-hidden">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Name & Title -->
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 gradient-text" data-aos="fade-up" data-aos-delay="200">
+                <span id="hero-name">Omkar Gouda</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-600 dark:text-gray-300" data-aos="fade-up" data-aos-delay="400">
+                <span id="hero-tagline">Full Stack Developer & UI/UX Designer</span><span class="blinking-cursor">|</span>
+            </p>
+            <p id="hero-bio" class="text-lg mb-12 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="500">
+                Creating beautiful, functional, and user-centered digital experiences with modern technologies
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12" data-aos="fade-up" data-aos-delay="600">
+                <button id="download-cv" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover-glow transition-all duration-300 font-semibold text-lg shadow-lg">
+                    <i class="fas fa-download mr-2"></i>Download Resume
+                </button>
+                <a href="#contact" class="px-8 py-4 border-2 border-purple-500 text-purple-500 rounded-xl hover:bg-purple-500 hover:text-white transition-all duration-300 font-semibold text-lg">
+                    <i class="fas fa-envelope mr-2"></i>Get In Touch
+                </a>
+            </div>
+            
+            <!-- Social Links -->
+            <div id="hero-social-links" class="flex justify-center space-x-6" data-aos="fade-up" data-aos-delay="800">
+                <!-- Social links will be loaded from Firebase -->
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 scroll-indicator">
+            <a href="#about" class="text-gray-400 hover:text-purple-500 transition-colors">
+                <i class="fas fa-chevron-down text-2xl"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-gray-50 dark:bg-dark-card">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">About Me</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Passionate developer with expertise in modern web technologies
+                </p>
+            </div>
+            
+            <!-- Content - Centered -->
+            <div class="max-w-4xl mx-auto" data-aos="fade-up">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold mb-4">Hello! I'm <span class="gradient-text" id="about-name">Your Name</span></h3>
+                    <div id="about-description" class="text-gray-600 dark:text-gray-300 mb-8 space-y-4">
+                        <p>I'm a passionate full-stack developer with over 3 years of experience in creating beautiful, functional, and user-centered digital experiences.</p>
+                        <p>I specialize in modern JavaScript frameworks, responsive design, and building scalable web applications that make a difference.</p>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                        <div class="text-center p-4 glassmorphism rounded-lg">
+                            <div class="text-3xl font-bold gradient-text" id="projects-count">0</div>
+                            <div class="text-sm text-gray-500">Projects</div>
+                        </div>
+                        <div class="text-center p-4 glassmorphism rounded-lg">
+                            <div class="text-3xl font-bold gradient-text" id="certificates-count">0</div>
+                            <div class="text-sm text-gray-500">Certificates</div>
+                        </div>
+                        <div class="text-center p-4 glassmorphism rounded-lg">
+                            <div class="text-3xl font-bold gradient-text" id="happy-clients-count">0</div>
+                            <div class="text-sm text-gray-500">Happy Clients</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-20 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Skills & Expertise</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Technologies and tools I use to bring ideas to life
+                </p>
+            </div>
+            
+          
+            
+            <!-- Skills Grid -->
+            <div id="skills-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Skills will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    <section id="education" class="py-20 bg-white dark:bg-dark-card">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Education</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    My academic background and qualifications
+                </p>
+            </div>
+            
+            <!-- Education Timeline -->
+            <div id="education-timeline" class="max-w-4xl mx-auto">
+                <!-- Education items will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Featured Projects</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    A showcase of my recent work and creative solutions
+                </p>
+            </div>
+            
+            <!-- Projects Grid -->
+            <div id="projects-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Projects will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Certificates Section -->
+    <section id="certificates" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Certificates & Achievements</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Professional certifications and recognitions
+                </p>
+            </div>
+            
+            <!-- Certificates Grid -->
+            <div id="certificates-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Certificates will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50 dark:bg-dark-card">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold mb-4 gradient-text">Get In Touch</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Have a project in mind? Let's work together to create something amazing
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Contact Info -->
+                <div data-aos="fade-right">
+                    <h3 class="text-2xl font-bold mb-6">Let's Connect</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-envelope text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Email</p>
+                                <p class="text-gray-600 dark:text-gray-300" id="contact-email">your.email@example.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <i class="fab fa-whatsapp text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">WhatsApp</p>
+                                <p class="text-gray-600 dark:text-gray-300" id="contact-phone">+1 234 567 8900</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-map-marker-alt text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Location</p>
+                                <p class="text-gray-600 dark:text-gray-300" id="contact-location">Your City, Country</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Social Links -->
+                    <div class="mt-8">
+                        <p class="font-medium mb-4">Follow me on social media</p>
+                        <div id="contact-social-links" class="flex space-x-4">
+                            <!-- Social links loaded from Firebase -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Form -->
+                <div data-aos="fade-left">
+                    <form id="contact-form" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block text-sm font-medium mb-2">Name *</label>
+                                <input type="text" id="name" name="name" required 
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium mb-2">Email *</label>
+                                <input type="email" id="email" name="email" required 
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium mb-2">Phone</label>
+                            <input type="tel" id="phone" name="phone" 
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label for="subject" class="block text-sm font-medium mb-2">Subject *</label>
+                            <input type="text" id="subject" name="subject" required 
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label for="message" class="block text-sm font-medium mb-2">Message *</label>
+                            <textarea id="message" name="message" rows="5" required 
+                                      class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"></textarea>
+                        </div>
+                        <button type="submit" 
+                                class="w-full px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover-glow transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            <span id="contact-btn-text">Send Message</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 dark:bg-black text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold gradient-text mb-4">OG</h3>
+                    <p class="text-gray-300 mb-4" id="footer-description">
+                        Passionate developer creating innovative solutions for the digital world.
+                    </p>
+                    <div id="footer-social-links" class="flex space-x-4">
+                        <!-- Social links loaded from Firebase -->
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-300 hover:text-white transition-colors">Home</a></li>
+                        <li><a href="#about" class="text-gray-300 hover:text-white transition-colors">About</a></li>
+                        <li><a href="#projects" class="text-gray-300 hover:text-white transition-colors">Projects</a></li>
+                        <li><a href="#certificates" class="text-gray-300 hover:text-white transition-colors">Certificates</a></li>
+                        <li><a href="#contact" class="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Services</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li>Web Development</li>
+                        <li>UI/UX Design</li>
+                        <li>Mobile Apps</li>
+                        <li>API Development</li>
+                        <li>Consulting</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-8 text-center">
+                <p class="text-gray-300">
+                    © 2025 Omkar Gouda. Designed with <i class="fas fa-heart text-red-500"></i> & built with modern technologies.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal for Certificate Preview -->
+    <div id="certificate-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-full overflow-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div id="modal-content" class="text-center">
+                    <!-- Certificate content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full transition-transform duration-300 hidden">
+        <div id="toast-content" class="px-6 py-3 rounded-lg shadow-lg">
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Supabase Configuration -->
+    <script src="supabase-config.js"></script>
+    
+    <!-- Main JavaScript with Supabase -->
+    <script src="portfolio-supabase.js"></script>
+    
+    <style>
+        /* Additional Styles are now in styles.css */
+    </style>
+</body>
+</html>
