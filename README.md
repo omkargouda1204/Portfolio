@@ -235,9 +235,9 @@ portfolio/
 ## Support
 
 For issues or questions:
-- Email: omkargouda1204@gmail.com
 - Check browser console for detailed error messages
 - Verify all setup steps were completed
+- Review the documentation files included in this project
 
 ## License
 

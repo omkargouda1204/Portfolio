@@ -2,6 +2,7 @@
 [build]
   publish = "."
   command = "npm run build:netlify || echo 'No build needed for static site'"
+  environment = { SECRETS_SCAN_OMIT_PATHS = "README.md,.env.example,*.md,setup-local.js" }
 
 # Environment variables (set these in Netlify Dashboard)
 # Site Settings > Environment variables
