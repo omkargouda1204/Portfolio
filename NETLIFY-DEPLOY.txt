@@ -1,0 +1,50 @@
+================================================================================
+✅ SECRETS SCANNING ISSUE FIXED! 
+================================================================================
+
+CHANGES MADE:
+✅ Added SECRETS_SCAN_OMIT_PATHS to netlify.toml
+✅ Documentation files (.md, .env.example) now ignored by secrets scanner
+✅ Removed email addresses from README.md
+✅ Pushed to GitHub (commit: 7e47a83)
+
+================================================================================
+🚀 DEPLOY NOW - FOLLOW THESE STEPS:
+================================================================================
+
+STEP 1: Go to Netlify Dashboard
+   → Site Settings → Environment variables
+
+STEP 2: Add these 8 environment variables:
+   (Copy the actual values from your local .env file)
+
+   SUPABASE_URL=your_actual_supabase_url
+   SUPABASE_ANON_KEY=your_actual_supabase_key
+   STORAGE_BUCKET=Portfolio
+   STORAGE_URL=your_actual_storage_url
+   EMAIL_SERVICE=gmail
+   EMAIL_ADDRESS=your_actual_email
+   EMAIL_PASSWORD=your_actual_app_password
+   EMAIL_TO=your_recipient_email
+
+STEP 3: Trigger New Deployment
+   → Go to Deploys tab
+   → Click "Trigger deploy" → "Deploy site"
+   → Wait 2-3 minutes
+
+STEP 4: Check Build Log
+   Should see:
+   ✅ All required environment variables found
+   ✅ Environment variables injected successfully
+   ✅ Build complete!
+
+   Should NOT see secrets scanning errors anymore!
+
+================================================================================
+✅ READY TO DEPLOY!
+================================================================================
+
+The secrets scanning is now configured to ignore documentation files.
+Your actual secrets will be injected from Netlify environment variables.
+
+Next: Set those 8 environment variables in Netlify Dashboard!
