@@ -9,10 +9,15 @@ const nodemailer = require('nodemailer');
 const EMAIL_CONFIG = {
     service: process.env.EMAIL_SERVICE || 'gmail',
     auth: {
-        user: process.env.EMAIL_ADDRESS || 'bhojanaxpress@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'wogz xosm yqvp prwa' // App password
+        user: process.env.EMAIL_ADDRESS,
+        pass: process.env.EMAIL_PASSWORD // App password (required)
     }
 };
+
+// Validate required environment variables
+if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
+    throw new Error('EMAIL_ADDRESS and EMAIL_PASSWORD environment variables are required');
+}
 
 // Create transporter
 const transporter = nodemailer.createTransporter(EMAIL_CONFIG);
@@ -23,7 +28,7 @@ async function sendContactEmail(contactData) {
     
     const mailOptions = {
         from: EMAIL_CONFIG.auth.user,
-        to: process.env.EMAIL_TO || 'omkargouda1204@gmail.com', // Your email from .env
+        to: process.env.EMAIL_TO, // Your email from .env
         replyTo: email, // User's email for easy reply
         subject: `Portfolio Contact: ${subject}`,
         html: `

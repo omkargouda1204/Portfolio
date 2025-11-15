@@ -527,20 +527,13 @@
     animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Responsive design helpers */
-@media (max-width: 768px) {
-    .social-link {
-        width: 2.5rem;
-        height: 2.5rem;
-    }
-    
-    .social-link.large {
-        width: 3rem;
-        height: 3rem;
-    }
-}
+/* ============================================
+   COMPREHENSIVE RESPONSIVE DESIGN
+   For: Mobile, Tablet, Laptop, Desktop, iPhone, iPad, Android
+   Browsers: Chrome, Firefox, Edge, Safari
+   ============================================ */
 
-/* Custom scrollbar */
+/* Custom scrollbar for all browsers */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -568,4 +561,534 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
     background: #9CA3AF;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #8B5CF6 #f1f1f1;
+}
+
+.dark * {
+    scrollbar-color: #6B7280 #374151;
+}
+
+/* Base responsive typography */
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* Prevent horizontal scroll on all elements */
+* {
+    box-sizing: border-box;
+}
+
+img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Touch-friendly button sizes */
+button, a.btn, .button {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+}
+
+/* ============================================
+   EXTRA SMALL DEVICES (320px - 479px)
+   iPhone SE, Small Android phones
+   ============================================ */
+@media (max-width: 479px) {
+    html {
+        font-size: 14px;
+    }
+    
+    /* Hero section */
+    .hero-title {
+        font-size: 2rem !important;
+        line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem !important;
+    }
+    
+    /* Navigation */
+    .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    /* Social links */
+    .social-link {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+    }
+    
+    /* Buttons */
+    .btn, button {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Cards */
+    .card, .bg-white, .bg-gray-800 {
+        padding: 1rem !important;
+    }
+    
+    /* Section titles */
+    h2 {
+        font-size: 1.75rem !important;
+    }
+    
+    h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Grid layouts - single column */
+    #skills-grid,
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Form inputs */
+    input, textarea, select {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        padding: 0.875rem !important;
+    }
+    
+    /* Spacing */
+    section {
+        padding: 3rem 1rem !important;
+    }
+    
+    /* Image heights */
+    .project-image, .certificate-image {
+        height: 200px !important;
+    }
+}
+
+/* ============================================
+   SMALL DEVICES (480px - 639px)
+   iPhone 12/13/14, Medium Android phones
+   ============================================ */
+@media (min-width: 480px) and (max-width: 639px) {
+    html {
+        font-size: 15px;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem !important;
+    }
+    
+    .social-link {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    #skills-grid,
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+    }
+    
+    section {
+        padding: 3.5rem 1.25rem !important;
+    }
+    
+    .project-image, .certificate-image {
+        height: 220px !important;
+    }
+}
+
+/* ============================================
+   MEDIUM DEVICES (640px - 767px)
+   Large phones, small tablets
+   ============================================ */
+@media (min-width: 640px) and (max-width: 767px) {
+    .hero-title {
+        font-size: 3rem !important;
+    }
+    
+    .social-link {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+    
+    #skills-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem !important;
+    }
+    
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem !important;
+    }
+    
+    section {
+        padding: 4rem 1.5rem !important;
+    }
+    
+    .project-image, .certificate-image {
+        height: 240px !important;
+    }
+}
+
+/* ============================================
+   TABLET DEVICES (768px - 1023px)
+   iPad, iPad Mini, Android tablets
+   ============================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .hero-title {
+        font-size: 3.5rem !important;
+    }
+    
+    .social-link {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    #skills-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.75rem !important;
+    }
+    
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 2rem !important;
+    }
+    
+    section {
+        padding: 5rem 2rem !important;
+    }
+    
+    .project-image, .certificate-image {
+        height: 260px !important;
+    }
+    
+    /* Two-column layout for stats */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ============================================
+   LAPTOP DEVICES (1024px - 1279px)
+   iPad Pro, Small laptops
+   ============================================ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .container {
+        max-width: 1000px;
+    }
+    
+    #skills-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+    
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    section {
+        padding: 6rem 2rem !important;
+    }
+    
+    .project-image, .certificate-image {
+        height: 280px !important;
+    }
+}
+
+/* ============================================
+   DESKTOP DEVICES (1280px - 1535px)
+   Standard laptops, small desktops
+   ============================================ */
+@media (min-width: 1280px) and (max-width: 1535px) {
+    .container {
+        max-width: 1200px;
+    }
+    
+    #skills-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+    
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* ============================================
+   LARGE DESKTOP (1536px+)
+   Large monitors, 2K, 4K displays
+   ============================================ */
+@media (min-width: 1536px) {
+    .container {
+        max-width: 1400px;
+    }
+    
+    #skills-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+    
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* ============================================
+   LANDSCAPE ORIENTATION (Mobile/Tablet)
+   ============================================ */
+@media (max-width: 1023px) and (orientation: landscape) {
+    /* Reduce vertical spacing in landscape */
+    section {
+        padding-top: 3rem !important;
+        padding-bottom: 3rem !important;
+    }
+    
+    .hero-section {
+        min-height: 70vh !important;
+    }
+    
+    /* Adjust grid for landscape */
+    #skills-grid,
+    #projects-grid,
+    #certificates-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* ============================================
+   iOS SPECIFIC FIXES
+   Safari on iPhone/iPad
+   ============================================ */
+@supports (-webkit-touch-callout: none) {
+    /* Fix iOS input zoom */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+    
+    /* Fix iOS safe area */
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Smooth scrolling on iOS */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ============================================
+   EDGE/IE SPECIFIC FIXES
+   ============================================ */
+@supports (-ms-ime-align: auto) {
+    /* Grid fallback for IE/Edge */
+    #skills-grid,
+    #projects-grid,
+    #certificates-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    #skills-grid > *,
+    #projects-grid > *,
+    #certificates-grid > * {
+        flex: 0 0 calc(33.333% - 1rem);
+        margin-bottom: 1rem;
+    }
+}
+
+/* ============================================
+   FIREFOX SPECIFIC FIXES
+   ============================================ */
+@-moz-document url-prefix() {
+    /* Fix flexbox issues in Firefox */
+    .flex {
+        display: -moz-box;
+        display: flex;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    .no-print,
+    nav,
+    footer,
+    .social-link {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    section {
+        page-break-inside: avoid;
+    }
+}
+
+/* ============================================
+   HIGH CONTRAST MODE
+   For accessibility
+   ============================================ */
+@media (prefers-contrast: high) {
+    * {
+        border-width: 2px !important;
+    }
+    
+    button, a {
+        text-decoration: underline;
+    }
+}
+
+/* ============================================
+   REDUCED MOTION
+   For users with motion sensitivity
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ============================================
+   HOVER SUPPORT
+   Only apply hover effects on devices that support it
+   ============================================ */
+@media (hover: hover) and (pointer: fine) {
+    .hover-effect:hover {
+        transform: translateY(-5px);
+    }
+}
+
+/* Touch devices - larger hit areas */
+@media (hover: none) and (pointer: coarse) {
+    button, a, .clickable {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 12px 20px;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Text truncation utilities */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive spacing utilities */
+.gap-responsive {
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .gap-responsive {
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .gap-responsive {
+        gap: 1.5rem;
+    }
+}
+
+/* Responsive text sizes */
+.text-responsive-sm {
+    font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+    .text-responsive-sm {
+        font-size: 1rem;
+    }
+}
+
+.text-responsive-base {
+    font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+    .text-responsive-base {
+        font-size: 1.125rem;
+    }
+}
+
+.text-responsive-lg {
+    font-size: 1.125rem;
+}
+
+@media (min-width: 640px) {
+    .text-responsive-lg {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .text-responsive-lg {
+        font-size: 1.5rem;
+    }
+}
+
+/* Adjusted styles for certificates grid */
+#certificates-grid {
+    overflow: hidden; /* Remove scrollbars */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjust layout for better responsiveness */
+    gap: 2rem; /* Increase spacing between items */
+}
+
+.certificate-image {
+    height: 300px !important; /* Increase card size */
+    object-fit: cover; /* Ensure images fit nicely */
 }

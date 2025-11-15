@@ -1,6 +1,12 @@
 // Portfolio Website - Powered by Supabase
 // This file handles all frontend functionality for the portfolio
 
+// Get Supabase client from window (set by supabase-config.js)
+// Use window.supabase instead of creating a local const to ensure it's available when needed
+function getSupabaseClient() {
+    return window.supabase;
+}
+
 // Global State
 let portfolioData = {
     about: {},
@@ -67,6 +73,20 @@ async function waitForSupabase(maxWait = 10000) {
 
 async function initializeApp() {
     try {
+        // Initialize EmailJS with correct Public Key
+        if (typeof emailjs !== 'undefined') {
+            try {
+                // Initialize EmailJS with Public Key
+                emailjs.init('4kQoD5A8k6sFUh-zv'); // Public Key
+                console.log('✅ EmailJS initialized');
+                console.log('📧 Email service configured');
+            } catch (emailError) {
+                console.warn('⚠️ EmailJS initialization failed, emails will be saved to database only', emailError);
+            }
+        } else {
+            console.warn('⚠️ EmailJS not loaded, emails will be saved to database only');
+        }
+
         // Wait for Supabase to be ready (but don't fail if timeout)
         const supabaseReady = await waitForSupabase();
         console.log(supabaseReady ? '✅ Supabase ready' : '⚠️ Continuing without signed URLs');
@@ -111,9 +131,17 @@ async function initializeApp() {
 async function loadAllData() {
     try {
         console.log('Loading data from Supabase...');
+        
+        // Get Supabase client
+        const supabaseClient = getSupabaseClient();
+        
+        if (!supabaseClient) {
+            console.error('❌ Supabase client not initialized');
+            return;
+        }
 
         // Load Profile
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabaseClient
             .from('profile')
             .select('*')
             .limit(1)
@@ -125,7 +153,7 @@ async function loadAllData() {
         }
 
         // Load About
-        const { data: aboutData, error: aboutError } = await supabase
+        const { data: aboutData, error: aboutError } = await supabaseClient
             .from('about')
             .select('*')
             .limit(1)
@@ -141,7 +169,7 @@ async function loadAllData() {
         }
 
         // Load Projects
-        const { data: projectsData, error: projectsError } = await supabase
+        const { data: projectsData, error: projectsError } = await supabaseClient
             .from('projects')
             .select('*')
             .order('display_order', { ascending: true });
@@ -158,7 +186,7 @@ async function loadAllData() {
         }
 
         // Load Skills
-        const { data: skillsData, error: skillsError } = await supabase
+        const { data: skillsData, error: skillsError } = await supabaseClient
             .from('skills')
             .select('*')
             .order('display_order', { ascending: true });
@@ -169,7 +197,7 @@ async function loadAllData() {
         }
 
         // Load Experience
-        const { data: experienceData, error: experienceError } = await supabase
+        const { data: experienceData, error: experienceError } = await supabaseClient
             .from('experience')
             .select('*')
             .order('start_date', { ascending: false });
@@ -186,7 +214,7 @@ async function loadAllData() {
         }
 
         // Load Education
-        const { data: educationData, error: educationError } = await supabase
+        const { data: educationData, error: educationError } = await supabaseClient
             .from('education')
             .select('*')
             .order('start_year', { ascending: false });
@@ -197,7 +225,7 @@ async function loadAllData() {
         }
 
         // Load Certificates
-        const { data: certificatesData, error: certificatesError } = await supabase
+        const { data: certificatesData, error: certificatesError } = await supabaseClient
             .from('certificates')
             .select('*')
             .order('issue_date', { ascending: false });
@@ -768,57 +796,57 @@ async function renderCertificates() {
         const certUrl = cert.signedUrl;
         const imageUrl = cert.signedImageUrl;
         
+        // Use certificate PDF as preview if no image is provided
+        const displayUrl = imageUrl || certUrl;
+        
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all transform hover:scale-105 hover:-translate-y-2 duration-300" data-aos="fade-up">
-                ${imageUrl ? `
-                    <!-- Certificate has image thumbnail (like projects) -->
-                    <div class="relative group h-64 overflow-hidden">
-                        <img src="${imageUrl}" 
-                             alt="${cert.name || cert.title}" 
-                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                             onerror="this.parentElement.innerHTML='<div class=\\'h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center\\'><i class=\\'fas fa-certificate text-white text-6xl\\'></i></div>';">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-70 transition-all duration-300 flex items-center justify-center">
-                            ${certUrl ? `
-                                <a href="${certUrl}" target="_blank" class="opacity-0 group-hover:opacity-100 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                    <i class="fas fa-file-pdf mr-2"></i>View Certificate
-                                </a>
-                            ` : ''}
-                        </div>
-                        <div class="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
-                            <i class="fas fa-certificate mr-1"></i>Certified
-                        </div>
-                    </div>
-                ` : certUrl ? `
-                    <!-- No image, show gradient with icon -->
-                    <div class="relative group h-64 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <i class="fas fa-certificate text-white text-6xl opacity-30"></i>
-                        </div>
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300 flex items-center justify-center">
-                            <a href="${certUrl}" target="_blank" class="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg">
-                                <i class="fas fa-eye mr-2"></i>View Certificate
-                            </a>
+            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 hover:-translate-y-2 duration-300" data-aos="fade-up">
+                ${displayUrl ? `
+                    <!-- Certificate display with image or PDF preview - LARGER CARD -->
+                    <div class="relative h-72 sm:h-80 md:h-96 overflow-hidden">
+                        ${imageUrl ? `
+                            <!-- Has image thumbnail -->
+                            <img src="${imageUrl}" 
+                                 alt="${cert.name || cert.title}" 
+                                 class="w-full h-full object-contain bg-gray-50 dark:bg-gray-900"
+                                 onerror="this.parentElement.innerHTML='<div class=\\'h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center\\'><i class=\\'fas fa-certificate text-white text-6xl\\'></i></div>';">
+                        ` : certUrl ? `
+                            <!-- PDF preview (show in iframe) -->
+                            <iframe src="${certUrl}" 
+                                    class="w-full h-full pointer-events-none"
+                                    style="border: none;"
+                                    onerror="this.parentElement.innerHTML='<div class=\\'h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center\\'><i class=\\'fas fa-file-pdf text-white text-6xl\\'></i></div>';"></iframe>
+                        ` : ''}
+                        
+                        <!-- Certified Badge - Top Right -->
+                        <div class="absolute top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl flex items-center gap-2">
+                            <i class="fas fa-certificate"></i>
+                            <span>Certified</span>
                         </div>
                     </div>
                 ` : `
-                    <!-- No image and no PDF -->
-                    <div class="h-64 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center">
-                        <i class="fas fa-certificate text-white text-6xl"></i>
+                    <!-- No image or PDF, show gradient with icon -->
+                    <div class="h-72 sm:h-80 md:h-96 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center">
+                        <i class="fas fa-certificate text-white text-6xl sm:text-7xl md:text-8xl"></i>
                     </div>
                 `}
                 
-                <div class="p-6">
-                    <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">${cert.name || cert.title}</h3>
-                    <p class="text-gray-600 dark:text-gray-400 mb-3 flex items-center">
-                        <i class="fas fa-building mr-2 text-yellow-500"></i>${cert.issuing_organization}
+                <div class="p-6 sm:p-7 md:p-8">
+                    <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-3 text-gray-800 dark:text-white">${cert.name || cert.title}</h3>
+                    <p class="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-4 flex items-center">
+                        <i class="fas fa-building mr-3 text-yellow-500 flex-shrink-0 text-lg"></i>
+                        <span>${cert.issuing_organization}</span>
                     </p>
-                    <div class="flex items-center justify-between text-sm pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between text-sm sm:text-base pt-4 border-t border-gray-200 dark:border-gray-700">
                         <span class="text-gray-500 flex items-center">
-                            <i class="far fa-calendar mr-2 text-yellow-500"></i>${issueDate}
+                            <i class="far fa-calendar mr-2 text-yellow-500"></i>
+                            <span>${issueDate}</span>
                         </span>
                         ${certUrl ? `
-                            <a href="${certUrl}" target="_blank" class="text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 font-semibold flex items-center transition-colors duration-200">
-                                <i class="fas fa-external-link-alt mr-1"></i>Open PDF
+                            <a href="${certUrl}" target="_blank" 
+                               class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all duration-200">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Open Certificate</span>
                             </a>
                         ` : ''}
                     </div>
@@ -888,48 +916,75 @@ async function handleContactForm(e) {
     };
 
     try {
+        // Get supabase client
+        const supabaseClient = getSupabaseClient();
+        
+        if (!supabaseClient) {
+            throw new Error('Supabase client not available');
+        }
+        
         // Save to database
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('contact_messages')
             .insert([formData])
             .select();
 
         if (error) throw error;
 
-        // Send email notification using EmailJS
+        // Send email notification using EmailJS with correct credentials
+        let emailSent = false;
         try {
-            // Initialize EmailJS (only needed once)
-            if (typeof emailjs !== 'undefined' && !window.emailJsInitialized) {
-                // Replace 'YOUR_PUBLIC_KEY' with your actual EmailJS public key
-                emailjs.init('YOUR_PUBLIC_KEY');
-                window.emailJsInitialized = true;
-            }
-            
-            // Send email via EmailJS
             if (typeof emailjs !== 'undefined') {
                 const emailParams = {
                     from_name: formData.name,
                     from_email: formData.email,
                     subject: formData.subject,
                     message: formData.message,
-                    to_email: 'omkargouda1204@gmail.com'
+                    to_name: portfolioData.profile?.name || 'Portfolio Owner',
+                    to_email: portfolioData.profile?.email || 'owner@example.com',
+                    reply_to: formData.email,
+                    app_name: 'Portfolio',
+                    // Additional context
+                    full_message: `Name: ${formData.name}\nEmail: ${formData.email}\nSubject: ${formData.subject}\n\nMessage:\n${formData.message}`
                 };
                 
-                // Replace 'YOUR_SERVICE_ID' and 'YOUR_TEMPLATE_ID' with actual values
-                await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', emailParams);
-                console.log('✅ Email sent via EmailJS');
+                console.log('📧 Sending email via EmailJS...');
+                
+                // Use correct EmailJS credentials
+                // Service ID, Template ID, and Public Key
+                const response = await emailjs.send(
+                    'service_0ztg88v',    // Service ID
+                    'template_q68j3ab',   // Template ID
+                    emailParams,
+                    '4kQoD5A8k6sFUh-zv'   // Public Key
+                );
+                
+                console.log('✅ Email sent successfully!', response);
+                emailSent = true;
             } else {
                 console.warn('⚠️ EmailJS not loaded, message saved to database only');
             }
         } catch (emailError) {
-            console.error('❌ Error sending email via EmailJS:', emailError);
-            // Don't fail the whole operation if email fails
+            console.error('❌ Email sending failed:', emailError);
+            console.log('Error details:', {
+                status: emailError.status,
+                text: emailError.text,
+                message: emailError.message
+            });
+            // Don't fail the whole operation if email fails - message is already in database
+            emailSent = false;
         }
         
-        showToast('✅ Message sent successfully! I\'ll get back to you soon.', 'success');
+        // Show success message - message is saved to database regardless of email status
+        if (emailSent) {
+            showToast('✅ Message sent successfully! Email notification sent.', 'success');
+        } else {
+            showToast('✅ Message received! Your message has been saved and I will get back to you soon.', 'success');
+        }
+        
         contactForm.reset();
         
-        console.log('✅ Contact message saved:', data);
+        console.log('✅ Contact message saved to database. You can check messages in admin panel:', data);
     } catch (error) {
         console.error('Error sending message:', error);
         showToast('❌ Error sending message. Please try again.', 'error');
@@ -961,7 +1016,12 @@ function toggleTheme() {
 // Debug function to check profile data
 async function debugProfileData() {
     console.log('=== DEBUG PROFILE DATA ===');
-    const { data, error } = await supabase.from('profile').select('*').limit(1).single();
+    const supabaseClient = getSupabaseClient();
+    if (!supabaseClient) {
+        console.error('Supabase client not available');
+        return null;
+    }
+    const { data, error } = await supabaseClient.from('profile').select('*').limit(1).single();
     if (error) {
         console.error('Error fetching profile:', error);
     } else {

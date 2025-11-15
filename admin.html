@@ -56,12 +56,62 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* Admin Panel Responsive Styles */
+        @media (max-width: 768px) {
+            #admin-dashboard {
+                flex-direction: column;
+            }
+            
+            #admin-dashboard > div:first-child {
+                width: 100% !important;
+                min-height: auto !important;
+                position: relative;
+            }
+            
+            .admin-sidebar-link {
+                padding: 12px 16px;
+            }
+            
+            #login-screen > div {
+                margin: 1rem;
+                padding: 1.5rem !important;
+            }
+            
+            .admin-content-section {
+                padding: 1rem !important;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            .text-xl {
+                font-size: 1.125rem !important;
+            }
+            
+            button, .admin-btn-primary, .admin-btn-secondary {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+            }
+            
+            input, textarea, select {
+                font-size: 16px !important;
+                padding: 0.75rem !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-admin-darker text-gray-900 dark:text-white">
     
     <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-admin-primary to-admin-secondary">
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-admin-primary to-admin-secondary px-4">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl w-full max-w-md">
             <div class="text-center mb-8">
                 <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">

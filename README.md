@@ -39,9 +39,15 @@ A modern, responsive portfolio website with a comprehensive admin panel for mana
 1. Create account at [https://supabase.com](https://supabase.com)
 2. Create new project
 3. Run the SQL from `database-fix.sql` in SQL Editor to create all columns
-4. Create storage bucket named "portfolio" (make it public)
+4. Create storage bucket named "Portfolio" (private bucket recommended)
 5. Copy your Supabase URL and Anon Key
-6. Update `supabase-config.js` with your credentials
+6. Add to `.env` file (local) or Netlify environment variables (production):
+   ```
+   SUPABASE_URL=your_project_url
+   SUPABASE_ANON_KEY=your_anon_key
+   STORAGE_BUCKET=Portfolio
+   STORAGE_URL=your_storage_url
+   ```
 
 ### 2. Email Service Setup
 
@@ -115,16 +121,16 @@ const ADMIN_PASSWORD = 'YourNewPassword';
 
 ## Email Configuration
 
-The email service is configured with:
-- **Sender**: bhojanaxpress@gmail.com
-- **Recipient**: omkargouda1204@gmail.com
-- **SMTP**: Gmail with app password
+The email service uses Gmail SMTP. Configure via environment variables:
+- **EMAIL_ADDRESS**: Your Gmail address (sender)
+- **EMAIL_PASSWORD**: Gmail app-specific password
+- **EMAIL_TO**: Recipient email address
 
 ### Gmail App Password Setup
-1. Go to Google Account settings
-2. Security → 2-Step Verification → App passwords
-3. Generate new app password
-4. Update in `email-service.js` if needed
+1. Enable 2FA on your Gmail account
+2. Go to Google Account > Security > 2-Step Verification
+3. Scroll to "App passwords" and generate new password
+4. Add to `.env` file or Netlify environment variables
 
 ## File Upload
 

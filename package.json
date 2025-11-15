@@ -1,0 +1,25 @@
+{
+  "name": "portfolio-website",
+  "version": "2.0.0",
+  "description": "Modern portfolio website with Supabase backend",
+  "main": "index.html",
+  "scripts": {
+    "build:netlify": "node build-script.js",
+    "start": "node email-service.js",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "portfolio",
+    "supabase",
+    "tailwind"
+  ],
+  "author": "Omkar Gouda",
+  "license": "MIT",
+  "dependencies": {
+    "nodemailer": "^6.9.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {}
+}

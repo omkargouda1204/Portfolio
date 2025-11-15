@@ -1,14 +1,14 @@
 // Supabase Configuration for Portfolio Project
 // This replaces Firebase with Supabase SQL database and storage
-// NOTE: In production, these should come from environment variables
-// For browser-based apps, these values are safe to expose (they're public)
+// NOTE: These values are loaded from Netlify environment variables at build time
+// For browser-based apps, the anon key is safe to expose (security via RLS)
 // The real security is handled by Supabase Row Level Security (RLS)
 
-const SUPABASE_URL = 'https://ckyxqzgckwzimmdukmvl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNreXhxemdja3d6aW1tZHVrbXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODgxNDUsImV4cCI6MjA3Nzc2NDE0NX0.7Yneds1Gz92R9V9IKiJ_67fB44-5LfV3CmCoe_XBZgA';
-const STORAGE_BUCKET = 'Portfolio';  // Using the Portfolio bucket with folders: profiles/, resumes/, certificates/, projects/
-// Storage endpoint for signed URLs
-const STORAGE_URL = 'https://ckyxqzgckwzimmdukmvl.storage.supabase.co/storage/v1/s3/Portfolio';
+// These will be replaced at build time by Netlify (using find-and-replace or build plugin)
+const SUPABASE_URL = '__SUPABASE_URL__';
+const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+const STORAGE_BUCKET = '__STORAGE_BUCKET__';
+const STORAGE_URL = '__STORAGE_URL__';
 
 // Initialize Supabase client using the global supabase object from CDN
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

@@ -1,6 +1,9 @@
 // COMPLETE ADMIN PANEL - SUPABASE POWERED WITH FULL CRUD
 // Full featured admin panel with Add, Edit, Delete, Settings, and Messaging
 
+// Get Supabase client from window (set by supabase-config.js)
+const supabase = window.supabase;
+
 let portfolioData = {
     about: {},
     profile: {},
