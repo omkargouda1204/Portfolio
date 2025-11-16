@@ -73,20 +73,6 @@ async function waitForSupabase(maxWait = 10000) {
 
 async function initializeApp() {
     try {
-        // Initialize EmailJS with correct Public Key
-        if (typeof emailjs !== 'undefined') {
-            try {
-                // Initialize EmailJS with Public Key
-                emailjs.init('4kQoD5A8k6sFUh-zv'); // Public Key
-                console.log('✅ EmailJS initialized');
-                console.log('📧 Email service configured');
-            } catch (emailError) {
-                console.warn('⚠️ EmailJS initialization failed, emails will be saved to database only', emailError);
-            }
-        } else {
-            console.warn('⚠️ EmailJS not loaded, emails will be saved to database only');
-        }
-
         // Wait for Supabase to be ready (but don't fail if timeout)
         const supabaseReady = await waitForSupabase();
         console.log(supabaseReady ? '✅ Supabase ready' : '⚠️ Continuing without signed URLs');
@@ -931,60 +917,11 @@ async function handleContactForm(e) {
 
         if (error) throw error;
 
-        // Send email notification using EmailJS with correct credentials
-        let emailSent = false;
-        try {
-            if (typeof emailjs !== 'undefined') {
-                const emailParams = {
-                    from_name: formData.name,
-                    from_email: formData.email,
-                    subject: formData.subject,
-                    message: formData.message,
-                    to_name: portfolioData.profile?.name || 'Portfolio Owner',
-                    to_email: portfolioData.profile?.email || 'owner@example.com',
-                    reply_to: formData.email,
-                    app_name: 'Portfolio',
-                    // Additional context
-                    full_message: `Name: ${formData.name}\nEmail: ${formData.email}\nSubject: ${formData.subject}\n\nMessage:\n${formData.message}`
-                };
-                
-                console.log('📧 Sending email via EmailJS...');
-                
-                // Use correct EmailJS credentials
-                // Service ID, Template ID, and Public Key
-                const response = await emailjs.send(
-                    'service_0ztg88v',    // Service ID
-                    'template_q68j3ab',   // Template ID
-                    emailParams,
-                    '4kQoD5A8k6sFUh-zv'   // Public Key
-                );
-                
-                console.log('✅ Email sent successfully!', response);
-                emailSent = true;
-            } else {
-                console.warn('⚠️ EmailJS not loaded, message saved to database only');
-            }
-        } catch (emailError) {
-            console.error('❌ Email sending failed:', emailError);
-            console.log('Error details:', {
-                status: emailError.status,
-                text: emailError.text,
-                message: emailError.message
-            });
-            // Don't fail the whole operation if email fails - message is already in database
-            emailSent = false;
-        }
-        
-        // Show success message - message is saved to database regardless of email status
-        if (emailSent) {
-            showToast('✅ Message sent successfully! Email notification sent.', 'success');
-        } else {
-            showToast('✅ Message received! Your message has been saved and I will get back to you soon.', 'success');
-        }
-        
+        // Show success message
+        showToast('✅ Message sent successfully! I will get back to you soon.', 'success');
         contactForm.reset();
         
-        console.log('✅ Contact message saved to database. You can check messages in admin panel:', data);
+        console.log('✅ Contact message saved to database:', data);
     } catch (error) {
         console.error('Error sending message:', error);
         showToast('❌ Error sending message. Please try again.', 'error');

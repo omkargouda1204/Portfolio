@@ -2,7 +2,7 @@
 [build]
   publish = "."
   command = "npm run build:netlify || echo 'No build needed for static site'"
-  environment = { SECRETS_SCAN_OMIT_PATHS = "*.md,*.txt,.env.example,setup-local.js,supabase-config.js,build-script.js,email-service.js" }
+  environment = { SECRETS_SCAN_OMIT_KEYS = "STORAGE_BUCKET,EMAIL_SERVICE" }
 
 # Environment variables (set these in Netlify Dashboard)
 # Site Settings > Environment variables
