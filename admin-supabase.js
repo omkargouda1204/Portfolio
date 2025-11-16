@@ -1677,6 +1677,13 @@ function addCertificate() {
             </div>
             
             <div>
+                <label class="block text-sm font-medium mb-2">Certificate Title</label>
+                <input type="text" id="cert-title"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                    placeholder="E.g., Professional Certificate, Course Completion">
+            </div>
+            
+            <div>
                 <label class="block text-sm font-medium mb-2">Issuing Organization *</label>
                 <input type="text" id="cert-org" required
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
@@ -1696,8 +1703,8 @@ function addCertificate() {
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Certificate URL (optional)</label>
-                <input type="url" id="cert-url" placeholder="https://verify-certificate.com/..."
+                <label class="block text-sm font-medium mb-2">Verification URL (optional)</label>
+                <input type="url" id="cert-verify-url" placeholder="https://verify-certificate.com/..."
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
                 <p class="text-xs text-gray-500 mt-1">External verification link</p>
             </div>
@@ -1814,20 +1821,23 @@ async function saveCertificate(e, id) {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
         
         const name = document.getElementById('cert-name').value.trim();
-        const title = document.getElementById('cert-title').value.trim();
+        const titleElement = document.getElementById('cert-title');
+        const title = titleElement ? titleElement.value.trim() : name;
         const issuing_organization = document.getElementById('cert-org').value.trim();
         const issue_date = document.getElementById('cert-date').value;
-        const verify_url = document.getElementById('cert-verify-url').value.trim();
+        const verifyUrlElement = document.getElementById('cert-verify-url');
+        const verify_url = verifyUrlElement ? verifyUrlElement.value.trim() : '';
         
         const data = {
             name: name,
-            title: title,
+            title: title || name,
             issuing_organization: issuing_organization,
             issue_date: issue_date
         };
         
         // Handle certificate file upload
-        const certFile = document.getElementById('cert-file').files[0];
+        const certFileElement = document.getElementById('cert-file');
+        const certFile = certFileElement ? certFileElement.files[0] : null;
         if (certFile) {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading certificate...';
             const uploadResult = await uploadFile(certFile, 'certificates');
