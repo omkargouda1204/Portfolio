@@ -838,12 +838,9 @@ async function renderCertificates() {
                             <i class="${typeIcon} text-white text-5xl opacity-80"></i>
                         </div>
                     ` : effectivePdfUrl ? `
-                        <div class="cert-pdf-clip">
-                            <iframe src="${effectivePdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH"
-                                    class="cert-pdf-frame"
-                                    scrolling="no"
-                                    loading="lazy"
-                                    title="${cert.name || cert.title}"></iframe>
+                        <canvas class="cert-pdf-canvas" data-pdf-url="${effectivePdfUrl}"></canvas>
+                        <div class="cert-pdf-loading">
+                            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i>
                         </div>
                     ` : `
                         <div class="cert-media-fallback bg-gradient-to-br ${gradientClass}">
@@ -906,7 +903,80 @@ async function renderCertificates() {
     const countEl = document.getElementById('certificates-count');
     if (countEl) countEl.textContent = certificationsWithUrls.length;
 
+    // Render PDF canvases using PDF.js (no browser toolbar/scrollbar)
+    renderPdfCanvases();
+
     console.log('✅ Certifications & Internships rendered:', certificationsWithUrls.length);
+}
+
+// Render all PDF canvases via PDF.js — produces identical output in every browser
+async function renderPdfCanvases() {
+    const canvases = document.querySelectorAll('.cert-pdf-canvas');
+    if (!canvases.length) return;
+
+    // Wait for PDF.js library
+    if (typeof pdfjsLib === 'undefined') {
+        console.warn('⚠️ PDF.js not loaded, PDF previews will not render');
+        return;
+    }
+
+    // Set worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    canvases.forEach(async (canvas) => {
+        const url = canvas.getAttribute('data-pdf-url');
+        if (!url) return;
+
+        const container = canvas.parentElement;
+        const loader = canvas.nextElementSibling; // .cert-pdf-loading spinner
+
+        try {
+            const pdf = await pdfjsLib.getDocument({ url, withCredentials: false }).promise;
+            const page = await pdf.getPage(1);
+
+            // Measure the container
+            const boxW = container.offsetWidth;
+            const boxH = container.offsetHeight;
+
+            const vp = page.getViewport({ scale: 1 });
+
+            // Scale to COVER the container (like object-fit:cover)
+            const scale = Math.max(boxW / vp.width, boxH / vp.height);
+            // Use a minimum DPR of 2 for crisp rendering
+            const dpr = Math.max(window.devicePixelRatio || 1, 2);
+            const renderScale = scale * dpr;
+
+            const scaledVp = page.getViewport({ scale: renderScale });
+
+            canvas.width = scaledVp.width;
+            canvas.height = scaledVp.height;
+
+            // Display size = container size (CSS pixels); canvas resolution = high DPI
+            canvas.style.width = boxW + 'px';
+            canvas.style.height = boxH + 'px';
+            // Center the "cover" crop like object-position: center top
+            canvas.style.objectFit = 'cover';
+            canvas.style.objectPosition = 'center top';
+
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport: scaledVp }).promise;
+
+            // Hide loader
+            if (loader && loader.classList.contains('cert-pdf-loading')) {
+                loader.style.display = 'none';
+            }
+
+            console.log('✅ PDF canvas rendered:', url.substring(0, 60) + '…');
+        } catch (err) {
+            console.error('❌ PDF canvas render failed:', err);
+            // On failure, show a gradient fallback instead of broken canvas
+            canvas.style.display = 'none';
+            if (loader && loader.classList.contains('cert-pdf-loading')) {
+                loader.innerHTML = '<i class="fas fa-file-pdf text-gray-400 text-4xl"></i>';
+            }
+        }
+    });
 }
 
 // Setup Event Listeners

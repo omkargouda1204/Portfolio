@@ -1140,44 +1140,27 @@ button, a.btn, .button {
     justify-content: center;
 }
 
-/*
-  PDF iframe approach:
-  - cert-pdf-clip  = hard clip container (overflow:hidden hides toolbar & scrollbars)
-  - cert-pdf-frame = iframe scaled to 50% of 2x dimensions
-    top:-50px shifts iframe up so the browser PDF toolbar (~32px) is pushed above
-    the clip boundary and is never visible. No scrollbars survive overflow:hidden.
-*/
-.cert-pdf-clip {
+/* PDF canvas — rendered via PDF.js, identical in every browser */
+.cert-pdf-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+/* Spinner shown while PDF.js renders */
+.cert-pdf-loading {
     position: absolute;
     inset: 0;
-    overflow: hidden;       /* clips both the PDF toolbar above and scrollbar at right */
-    background: #fff;
-    scrollbar-width: none;  /* Firefox: hide any clip-div scrollbar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
 }
-.cert-pdf-clip::-webkit-scrollbar { display: none; }
-.dark .cert-pdf-clip {
-    background: #1f2937;
-}
-.cert-pdf-frame {
-    position: absolute;
-    /*
-      top: -64px — moves iframe up 64px before scale.
-      After scale(0.5) that hides 128px from top, well past any PDF toolbar height.
-    */
-    top: -64px;
-    left: 0;
-    /*
-      width: 220% — after scale(0.5) renders at 110% of container.
-      The extra 10% is clipped → PDF viewer's internal scrollbar (~17px)
-      which sits at the far-right of the iframe is pushed past the 100% clip edge.
-    */
-    width: 220%;
-    height: calc(220% + 128px); /* matches width ratio + top offset compensation */
-    border: 0;
-    transform: scale(0.5);
-    transform-origin: 0 0;
-    pointer-events: none;   /* no scroll interaction possible from user */
-    display: block;
+.dark .cert-pdf-loading {
+    background: #111827;
 }
 
 /* Responsive cert media heights */
