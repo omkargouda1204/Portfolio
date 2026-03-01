@@ -838,8 +838,8 @@ async function renderCertificates() {
                             <i class="${typeIcon} text-white text-5xl opacity-80"></i>
                         </div>
                     ` : effectivePdfUrl ? `
-                        <div class="cert-pdf-wrapper">
-                            <iframe src="${effectivePdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=75"
+                        <div class="cert-pdf-clip">
+                            <iframe src="${effectivePdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH"
                                     class="cert-pdf-frame"
                                     scrolling="no"
                                     loading="lazy"

@@ -1109,23 +1109,25 @@ button, a.btn, .button {
 .cert-media-box {
     height: 260px;
     background: #f3f4f6;
-    overflow: hidden;
+    overflow: hidden;       /* hard clip — nothing overflows, no scrollbars ever */
     position: relative;
+    scrollbar-width: none;  /* Firefox */
 }
+.cert-media-box::-webkit-scrollbar { display: none; } /* Chrome/Safari/Edge */
 .dark .cert-media-box {
     background: #111827;
 }
 
-/* Image: contain so full cert is visible without clipping */
+/* Image fills the allocated space — cover crops edges cleanly, no scrollbar, no whitespace */
 .cert-media-img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center top;
     display: block;
-    background: #fff;
-}
-.dark .cert-media-img {
-    background: #1f2937;
+    flex-shrink: 0;
+    max-width: 100%;    /* never wider than the box */
+    max-height: 100%;   /* never taller than the box */
 }
 
 /* Fallback gradient placeholder */
@@ -1138,48 +1140,56 @@ button, a.btn, .button {
     justify-content: center;
 }
 
-/* PDF: absolutely position iframe 2× size, scale to 50% — zero scrollbars */
-.cert-pdf-wrapper {
-    width: 100%;
-    height: 260px;
-    overflow: hidden;
-    position: relative;
+/*
+  PDF iframe approach:
+  - cert-pdf-clip  = hard clip container (overflow:hidden hides toolbar & scrollbars)
+  - cert-pdf-frame = iframe scaled to 50% of 2x dimensions
+    top:-50px shifts iframe up so the browser PDF toolbar (~32px) is pushed above
+    the clip boundary and is never visible. No scrollbars survive overflow:hidden.
+*/
+.cert-pdf-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;       /* clips both the PDF toolbar above and scrollbar at right */
     background: #fff;
+    scrollbar-width: none;  /* Firefox: hide any clip-div scrollbar */
+}
+.cert-pdf-clip::-webkit-scrollbar { display: none; }
+.dark .cert-pdf-clip {
+    background: #1f2937;
 }
 .cert-pdf-frame {
     position: absolute;
-    top: 0;
+    /*
+      top: -64px — moves iframe up 64px before scale.
+      After scale(0.5) that hides 128px from top, well past any PDF toolbar height.
+    */
+    top: -64px;
     left: 0;
-    width: 200%;
-    height: 200%;
-    border: none;
+    /*
+      width: 220% — after scale(0.5) renders at 110% of container.
+      The extra 10% is clipped → PDF viewer's internal scrollbar (~17px)
+      which sits at the far-right of the iframe is pushed past the 100% clip edge.
+    */
+    width: 220%;
+    height: calc(220% + 128px); /* matches width ratio + top offset compensation */
+    border: 0;
     transform: scale(0.5);
     transform-origin: 0 0;
-    pointer-events: none;
-    /* Hide scrollbars in all browsers */
-    overflow: hidden;
+    pointer-events: none;   /* no scroll interaction possible from user */
+    display: block;
 }
-/* Hide webkit scrollbars inside iframe (Chrome/Safari/Edge) */
-.cert-pdf-frame::-webkit-scrollbar { display: none; }
 
 /* Responsive cert media heights */
 @media (max-width: 479px) {
-    .cert-media-box,
-    .cert-pdf-wrapper { height: 210px; }
-    .cert-pdf-frame { height: 420px; width: 200%; }
+    .cert-media-box { height: 200px; }
 }
 @media (min-width: 480px) and (max-width: 767px) {
-    .cert-media-box,
-    .cert-pdf-wrapper { height: 230px; }
-    .cert-pdf-frame { height: 460px; width: 200%; }
+    .cert-media-box { height: 220px; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-    .cert-media-box,
-    .cert-pdf-wrapper { height: 250px; }
-    .cert-pdf-frame { height: 500px; width: 200%; }
+    .cert-media-box { height: 240px; }
 }
 @media (min-width: 1024px) {
-    .cert-media-box,
-    .cert-pdf-wrapper { height: 270px; }
-    .cert-pdf-frame { height: 540px; width: 200%; }
+    .cert-media-box { height: 260px; }
 }

@@ -1422,9 +1422,9 @@ async function saveProject(e, id) {
             data.image_url = null;
         }
         
+        const supabase = getSupabase();
         if (id) {
             // Update
-            const supabase = getSupabase();
             const { error } = await supabase.from('projects').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.projects.findIndex(p => p.id === id);
@@ -1432,7 +1432,6 @@ async function saveProject(e, id) {
             showToast('Project updated successfully!', 'success');
         } else {
             // Insert
-            const supabase = getSupabase();
             const { data: newProject, error } = await supabase.from('projects').insert([data]).select();
             if (error) throw error;
             portfolioData.projects.push(newProject[0]);
@@ -1572,15 +1571,14 @@ async function saveSkill(e, id) {
     };
     
     try {
+        const supabase = getSupabase();
         if (id) {
-            const supabase = getSupabase();
             const { error } = await supabase.from('skills').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.skills.findIndex(s => s.id === id);
             if (index !== -1) portfolioData.skills[index] = { ...portfolioData.skills[index], ...data };
             showToast('Skill updated successfully!', 'success');
         } else {
-            const supabase = getSupabase();
             const { data: newSkill, error } = await supabase.from('skills').insert([data]).select();
             if (error) throw error;
             portfolioData.skills.push(newSkill[0]);
@@ -1745,15 +1743,14 @@ async function saveEducation(e, id) {
     };
     
     try {
+        const supabase = getSupabase();
         if (id) {
-            const supabase = getSupabase();
             const { error } = await supabase.from('education').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.education.findIndex(e => e.id === id);
             if (index !== -1) portfolioData.education[index] = { ...portfolioData.education[index], ...data };
             showToast('Education updated successfully!', 'success');
         } else {
-            const supabase = getSupabase();
             const { data: newEdu, error } = await supabase.from('education').insert([data]).select();
             if (error) throw error;
             portfolioData.education.unshift(newEdu[0]);
@@ -2191,7 +2188,7 @@ function replyToMessage(id, email, name, phone) {
 }
 
 // ==================== PASSWORD CHANGE ====================
-function changePassword(e) {
+async function changePassword(e) {
     e.preventDefault();
     const current = document.getElementById('current-password').value;
     const newPass = document.getElementById('new-password').value;
@@ -2212,22 +2209,55 @@ function changePassword(e) {
         return;
     }
     
-    // Update password in both memory and localStorage
+    // Update password in memory and localStorage
     adminPassword = newPass;
     localStorage.setItem('adminPassword', newPass);
+    
+    // Also save to Supabase settings table (cross-device persistence)
+    const supabase = getSupabase();
+    if (supabase) {
+        try {
+            const { error } = await supabase
+                .from('settings')
+                .upsert({ key: 'admin_password', value: newPass }, { onConflict: 'key' });
+            if (error) {
+                console.warn('⚠️ Could not save password to DB (table may not exist yet):', error.message);
+            } else {
+                console.log('✅ Password saved to Supabase DB');
+            }
+        } catch (err) {
+            console.warn('⚠️ DB save failed:', err.message);
+        }
+    }
     
     // Clear form fields
     document.getElementById('current-password').value = '';
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-password').value = '';
     
-    // Show success message
-    showToast('Password changed successfully! You can now use the new password to login.', 'success');
+    showToast('Password changed successfully! Saved to database.', 'success');
     
-    // Re-render settings to show updated password
-    setTimeout(() => {
-        renderSettings();
-    }, 500);
+    setTimeout(() => { renderSettings(); }, 500);
+}
+
+// Load admin password from Supabase DB (runs at startup)
+async function initAdminPassword() {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    try {
+        const { data, error } = await supabase
+            .from('settings')
+            .select('value')
+            .eq('key', 'admin_password')
+            .single();
+        if (!error && data && data.value) {
+            adminPassword = data.value;
+            localStorage.setItem('adminPassword', data.value); // cache locally
+            console.log('✅ Admin password loaded from Supabase DB');
+        }
+    } catch (err) {
+        console.log('ℹ️ Using local/default password (settings table may not exist)');
+    }
 }
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -2284,3 +2314,6 @@ function showToast(msg,type='success') {
 }
 
 console.log('✅ Admin Panel loaded - All features ready!');
+
+// Load admin password from DB on startup (async, best-effort)
+initAdminPassword();
