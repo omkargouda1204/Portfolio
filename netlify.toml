@@ -1,0 +1,8 @@
+[build]
+  publish = "."
+
+# Tell Netlify's secrets scanner to skip these keys.
+# SUPABASE_ANON_KEY and SUPABASE_URL are intentionally public client-side keys
+# (not service-role keys). They must be in the JS bundle for the browser to use them.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_ANON_KEY,STORAGE_BUCKET,STORAGE_URL,EMAIL_ADDRESS,EMAIL_PASSWORD,EMAIL_SERVICE,EMAIL_TO,WHATSAPP_NUMBER"
