@@ -2,7 +2,10 @@
 // Full featured admin panel with Add, Edit, Delete, Settings, and Messaging
 
 // Get Supabase client from window (set by supabase-config.js)
-const supabase = window.supabase;
+// Using window.supabase directly to avoid redeclaration
+function getSupabase() {
+    return window.supabase;
+}
 
 let portfolioData = {
     about: {},
@@ -14,16 +17,35 @@ let portfolioData = {
     education: []
 };
 
-let adminPassword = localStorage.getItem('adminPassword') || 'Admin@123';
+let adminPassword = 'Admin@123';
+// Initialize admin password in localStorage if not exists
+if (!localStorage.getItem('adminPassword')) {
+    localStorage.setItem('adminPassword', adminPassword);
+} else {
+    // Update adminPassword variable with stored value
+    adminPassword = localStorage.getItem('adminPassword');
+}
 
 // LOGIN
 function login(e) {
     if (e) e.preventDefault();
+    
     const pwdInput = document.getElementById('admin-password');
     const errorEl = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
-    const pw = pwdInput ? pwdInput.value : '';
+    
+    if (!pwdInput) {
+        console.error('Password input not found');
+        showToast('Login form error', 'error');
+        return;
+    }
+    
+    const pw = pwdInput.value.trim();
     const saved = localStorage.getItem('adminPassword') || 'Admin@123';
+    
+    console.log('Entered password:', pw);
+    console.log('Expected password:', saved);
+    
     if (pw === saved) {
         if (errorEl) errorEl.classList.add('hidden');
         document.getElementById('login-screen').classList.add('hidden');
@@ -34,11 +56,11 @@ function login(e) {
         setupEventListeners();
         loadAllData();
     } else {
-        if (errorEl) {
-            errorText.textContent = 'Wrong password!';
+        if (errorEl && errorText) {
+            errorText.textContent = `Wrong password! Expected: ${saved}`;
             errorEl.classList.remove('hidden');
         }
-        showToast('Wrong password!', 'error');
+        showToast(`Wrong password! Expected: ${saved}`, 'error');
     }
 }
 
@@ -79,7 +101,7 @@ function setupEventListeners() {
                 education: 'Education',
                 skills: 'Skills',
                 projects: 'Projects',
-                certificates: 'Certificates',
+                certificates: 'Certifications & Internships',
                 messages: 'Messages',
                 settings: 'Settings'
             };
@@ -125,6 +147,7 @@ function showSection(n) {
 async function loadAllData() {
     try {
         console.log('Loading all data...');
+        const supabase = getSupabase();
         
         // Load Profile
         const { data: profile } = await supabase.from('profile').select('*').single();
@@ -146,11 +169,11 @@ async function loadAllData() {
         const { data: education } = await supabase.from('education').select('*').order('start_year', { ascending: false });
         if (education) portfolioData.education = education;
         
-        // Load Certificates
-        const { data: certificates } = await supabase.from('certificates').select('*').order('issue_date', { ascending: false });
-        if (certificates) {
-            portfolioData.certificates = certificates;
-            console.log('✅ Admin loaded certificates:', certificates.length, certificates.map(c => ({ id: c.id, name: c.name })));
+        // Load Certificates & Internships (combined)
+        const { data: certifications } = await supabase.from('certificates').select('*').order('pin_to_top', { ascending: false }).order('issue_date', { ascending: false });
+        if (certifications) {
+            portfolioData.certificates = certifications;
+            console.log('✅ Admin loaded certifications & internships:', certifications.length, certifications.map(c => ({ id: c.id, name: c.name || c.title, type: c.type || 'certificate' })));
         }
         
         // Load Messages
@@ -232,7 +255,7 @@ function renderDashboard() {
                         <i class="fas fa-certificate text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 dark:text-gray-400 text-sm">Certificates</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Certifications & Internships</p>
                         <p class="text-3xl font-bold">${portfolioData.certificates.length}</p>
                     </div>
                 </div>
@@ -271,7 +294,7 @@ function renderDashboard() {
                 </button>
                 <button onclick="showSection('certificates')" class="p-4 bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-lg transition-all transform hover:scale-105 shadow-lg">
                     <i class="fas fa-certificate text-2xl mb-2"></i>
-                    <p class="font-semibold">Certificates</p>
+                    <p class="font-semibold">Certifications & Internships</p>
                 </button>
                 <button onclick="showSection('messages')" class="p-4 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all transform hover:scale-105 shadow-lg relative">
                     <i class="fas fa-envelope text-2xl mb-2"></i>
@@ -557,24 +580,49 @@ function renderEducation() {
 
 function renderCertificates() {
     const content = document.getElementById('content-area');
+    
+    // Sort certifications: pinned first, then by date
+    const sortedCertifications = [...portfolioData.certificates].sort((a, b) => {
+        if (a.pin_to_top && !b.pin_to_top) return -1;
+        if (!a.pin_to_top && b.pin_to_top) return 1;
+        return new Date(b.issue_date) - new Date(a.issue_date);
+    });
+    
     content.innerHTML = `
-        <div class="mb-6">
-            <button onclick="addCertificate()" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-8 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                <i class="fas fa-plus mr-2"></i>Add Certificate
+        <div class="mb-6 flex gap-4">
+            <button onclick="addCertification('certificate')" class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all">
+                <i class="fas fa-certificate mr-2"></i>Add Certificate
+            </button>
+            <button onclick="addCertification('internship')" class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all">
+                <i class="fas fa-briefcase mr-2"></i>Add Internship
             </button>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            ${portfolioData.certificates.length === 0 ? `
+            ${sortedCertifications.length === 0 ? `
                 <div class="col-span-full text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
                     <i class="fas fa-certificate text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                    <p class="text-xl text-gray-500 dark:text-gray-400">No certificates yet. Add your first certificate!</p>
+                    <p class="text-xl text-gray-500 dark:text-gray-400">No certifications or internships yet. Add your first one!</p>
                 </div>
-            ` : portfolioData.certificates.map(c => `
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:scale-105">
+            ` : sortedCertifications.map(c => {
+                const isInternship = c.type === 'internship';
+                const typeIcon = isInternship ? 'fas fa-briefcase' : 'fas fa-certificate';
+                const typeColor = isInternship ? 'text-blue-600' : 'text-yellow-600';
+                const gradientClass = isInternship 
+                    ? 'from-blue-400 via-purple-500 to-indigo-500' 
+                    : 'from-yellow-400 via-orange-500 to-red-500';
+                
+                return `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all flex flex-col h-full ${c.pin_to_top ? 'ring-2 ring-green-400' : ''}">
+                    ${c.pin_to_top ? `
+                        <div class="bg-green-500 text-white text-center py-1 text-xs font-semibold">
+                            <i class="fas fa-thumbtack mr-1"></i>PINNED
+                        </div>
+                    ` : ''}
+                    
                     ${c.certificate_url ? `
-                        <div class="relative group">
-                            <img src="${c.certificate_url}" class="w-full h-48 object-cover" alt="${c.name}">
+                        <div class="relative group h-48 flex-shrink-0">
+                            <img src="${c.certificate_url}" class="w-full h-full object-cover" alt="${c.name || c.title}">
                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
                                 <a href="${c.certificate_url}" target="_blank" class="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-4 py-2 rounded-lg transition-all">
                                     <i class="fas fa-external-link-alt mr-2"></i>View
@@ -582,29 +630,45 @@ function renderCertificates() {
                             </div>
                         </div>
                     ` : `
-                        <div class="w-full h-48 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center">
-                            <i class="fas fa-certificate text-white text-6xl"></i>
+                        <div class="w-full h-48 flex-shrink-0 bg-gradient-to-br ${gradientClass} flex items-center justify-center">
+                            <i class="${typeIcon} text-white text-6xl"></i>
                         </div>
                     `}
                     
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold mb-2 line-clamp-2">${c.name}</h3>
-                        <p class="text-blue-600 dark:text-blue-400 mb-2 font-semibold">${c.issuing_organization}</p>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                            <i class="fas fa-calendar mr-2"></i>${c.issue_date}
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-bold flex-grow line-clamp-2">${c.name || c.title}</h3>
+                            <span class="ml-2 flex-shrink-0 ${typeColor}">
+                                <i class="${typeIcon}"></i>
+                            </span>
+                        </div>
+                        
+                        <p class="text-blue-600 dark:text-blue-400 mb-2 font-semibold text-sm">${c.issuing_organization}</p>
+                        
+                        ${c.description ? `
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">${c.description}</p>
+                        ` : ''}
+                        
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex items-center">
+                            <i class="fas fa-calendar mr-2"></i>
+                            ${new Date(c.issue_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
                         </p>
                         
-                        <div class="flex gap-2">
-                            <button onclick="editCertificate(${c.id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all">
-                                <i class="fas fa-edit mr-2"></i>Edit
+                        <div class="flex gap-2 mt-auto">
+                            <button onclick="togglePin(${c.id}, ${!c.pin_to_top})" class="flex items-center justify-center px-3 py-2 rounded-lg transition-all text-sm ${c.pin_to_top ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'}">
+                                <i class="fas fa-thumbtack"></i>
                             </button>
-                            <button onclick="deleteCertificate(${c.id})" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all">
-                                <i class="fas fa-trash mr-2"></i>Delete
+                            <button onclick="editCertification(${c.id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-all text-sm">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deleteCertification(${c.id})" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-all text-sm">
+                                <i class="fas fa-trash mr-1"></i>Delete
                             </button>
                         </div>
                     </div>
                 </div>
-            `).join('')}
+                `;
+            }).join('')}
         </div>
     `;
 }
@@ -787,6 +851,37 @@ function renderSettings() {
                 </div>
             </div>
             
+            <!-- Display Settings -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <h3 class="text-2xl font-bold mb-6">
+                    <i class="fas fa-eye text-indigo-500 mr-2"></i>Display Settings
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                        <label class="flex items-center justify-between">
+                            <div>
+                                <span class="block text-sm font-medium text-gray-800 dark:text-white mb-1">Show Featured Badge</span>
+                                <span class="block text-xs text-gray-600 dark:text-gray-400">Display ⭐ Featured badges on projects</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="show-featured-toggle" class="sr-only peer" 
+                                       onchange="toggleFeaturedDisplay(this.checked)" 
+                                       ${localStorage.getItem('showFeaturedBadge') !== 'false' ? 'checked' : ''}>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            </label>
+                        </label>
+                    </div>
+                    
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            When enabled, projects marked as "featured" will display a ⭐ Featured badge in the portfolio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- System Info -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
                 <h3 class="text-2xl font-bold mb-6">
@@ -825,9 +920,21 @@ function setTheme(theme) {
     }
 }
 
+// Display Settings Functions
+function toggleFeaturedDisplay(enabled) {
+    localStorage.setItem('showFeaturedBadge', enabled.toString());
+    if (enabled) {
+        showToast('Featured badges enabled', 'success');
+    } else {
+        showToast('Featured badges disabled', 'success');
+    }
+    // Note: Portfolio will need to be refreshed to see changes
+}
+
 async function testDatabaseConnection() {
     showToast('Testing connection...', 'info');
     try {
+        const supabase = getSupabase();
         const { data, error } = await supabase.from('profile').select('count').limit(1);
         if (error) throw error;
         showToast('✅ Database connection successful!', 'success');
@@ -1029,6 +1136,7 @@ async function saveProfile(e) {
             }
         }
         
+        const supabase = getSupabase();
         const { error } = await supabase.from('profile').update(data).eq('id', portfolioData.profile.id);
         if (error) throw error;
         
@@ -1138,6 +1246,7 @@ async function saveAbout(e) {
     };
     
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('about').update(data).eq('id', portfolioData.about.id);
         if (error) throw error;
         portfolioData.about = { ...portfolioData.about, ...data };
@@ -1315,6 +1424,7 @@ async function saveProject(e, id) {
         
         if (id) {
             // Update
+            const supabase = getSupabase();
             const { error } = await supabase.from('projects').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.projects.findIndex(p => p.id === id);
@@ -1322,6 +1432,7 @@ async function saveProject(e, id) {
             showToast('Project updated successfully!', 'success');
         } else {
             // Insert
+            const supabase = getSupabase();
             const { data: newProject, error } = await supabase.from('projects').insert([data]).select();
             if (error) throw error;
             portfolioData.projects.push(newProject[0]);
@@ -1340,6 +1451,7 @@ async function saveProject(e, id) {
 async function deleteProject(id) {
     if (!confirm('Are you sure you want to delete this project?')) return;
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('projects').delete().eq('id', id);
         if (error) throw error;
         portfolioData.projects = portfolioData.projects.filter(p => p.id !== id);
@@ -1461,12 +1573,14 @@ async function saveSkill(e, id) {
     
     try {
         if (id) {
+            const supabase = getSupabase();
             const { error } = await supabase.from('skills').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.skills.findIndex(s => s.id === id);
             if (index !== -1) portfolioData.skills[index] = { ...portfolioData.skills[index], ...data };
             showToast('Skill updated successfully!', 'success');
         } else {
+            const supabase = getSupabase();
             const { data: newSkill, error } = await supabase.from('skills').insert([data]).select();
             if (error) throw error;
             portfolioData.skills.push(newSkill[0]);
@@ -1483,6 +1597,7 @@ async function saveSkill(e, id) {
 async function deleteSkill(id) {
     if (!confirm('Are you sure you want to delete this skill?')) return;
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('skills').delete().eq('id', id);
         if (error) throw error;
         portfolioData.skills = portfolioData.skills.filter(s => s.id !== id);
@@ -1631,12 +1746,14 @@ async function saveEducation(e, id) {
     
     try {
         if (id) {
+            const supabase = getSupabase();
             const { error } = await supabase.from('education').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.education.findIndex(e => e.id === id);
             if (index !== -1) portfolioData.education[index] = { ...portfolioData.education[index], ...data };
             showToast('Education updated successfully!', 'success');
         } else {
+            const supabase = getSupabase();
             const { data: newEdu, error } = await supabase.from('education').insert([data]).select();
             if (error) throw error;
             portfolioData.education.unshift(newEdu[0]);
@@ -1653,6 +1770,7 @@ async function saveEducation(e, id) {
 async function deleteEducation(id) {
     if (!confirm('Are you sure you want to delete this education record?')) return;
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('education').delete().eq('id', id);
         if (error) throw error;
         portfolioData.education = portfolioData.education.filter(e => e.id !== id);
@@ -1665,48 +1783,89 @@ async function deleteEducation(id) {
 }
 
 // ==================== CERTIFICATES CRUD ====================
-function addCertificate() {
+function addCertification(type = 'certificate') {
+    const isInternship = type === 'internship';
+    const title = isInternship ? 'Add Internship' : 'Add Certificate';
+    const buttonText = isInternship ? 'Add Internship' : 'Add Certificate';
+    const nameLabel = isInternship ? 'Internship Title' : 'Certificate Name';
+    const orgLabel = isInternship ? 'Company/Organization' : 'Issuing Organization';
+    const dateLabel = isInternship ? 'Start Date' : 'Issue Date';
+    const fileLabel = isInternship ? 'Certificate/Document' : 'Certificate File';
+    const urlLabel = isInternship ? 'LinkedIn/Portfolio URL' : 'Verification URL';
+    
     const modal = document.getElementById('modal');
-    document.getElementById('modal-title').textContent = 'Add Certificate';
+    document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-content').innerHTML = `
-        <form onsubmit="saveCertificate(event, null)" class="space-y-4">
+        <form onsubmit="saveCertification(event, null, '${type}')" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium mb-2">Certificate Name *</label>
+                <label class="block text-sm font-medium mb-2">${nameLabel} *</label>
                 <input type="text" id="cert-name" required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium mb-2">Certificate Title</label>
-                <input type="text" id="cert-title"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-                    placeholder="E.g., Professional Certificate, Course Completion">
+                    placeholder="${isInternship ? 'Software Development Internship' : 'AWS Cloud Practitioner'}">
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Issuing Organization *</label>
+                <label class="block text-sm font-medium mb-2">${orgLabel} *</label>
                 <input type="text" id="cert-org" required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                    placeholder="${isInternship ? 'Google, Microsoft, etc.' : 'Amazon Web Services, Coursera, etc.'}">
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Issue Date *</label>
-                <input type="date" id="cert-date" required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium mb-2">Description</label>
+                <textarea id="cert-description" rows="3"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                    placeholder="${isInternship ? 'Describe your internship experience, projects, and responsibilities...' : 'Brief description of the certificate or what you learned...'}"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">${dateLabel} *</label>
+                        <input type="date" id="cert-date" required
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    ${isInternship ? `
+                        <div>
+                            <label class="block text-sm font-medium mb-2">End Date (optional)</label>
+                            <input type="date" id="cert-end-date"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                                placeholder="Leave blank if ongoing">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if internship is ongoing</p>
+                        </div>
+                    ` : `
+                        <div class="flex items-center">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="cert-pin" class="mr-3 rounded">
+                                <span class="text-sm font-medium">📌 Pin to Top</span>
+                            </label>
+                        </div>
+                    `}
+                </div>
+                
+                ${isInternship ? `
+                    <div class="flex items-center">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="cert-pin" class="mr-3 rounded">
+                            <span class="text-sm font-medium">📌 Pin to Top</span>
+                        </label>
+                    </div>
+                ` : ''}
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Certificate File (PDF/Image)</label>
+                <label class="block text-sm font-medium mb-2">${fileLabel} (PDF/Image)</label>
                 <input type="file" id="cert-file" accept=".pdf,image/*"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Upload certificate PDF or image</p>
+                <p class="text-xs text-gray-500 mt-1">${isInternship ? 'Upload completion certificate or recommendation letter' : 'Upload certificate PDF or image'}</p>
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Verification URL (optional)</label>
-                <input type="url" id="cert-verify-url" placeholder="https://verify-certificate.com/..."
+                <label class="block text-sm font-medium mb-2">${urlLabel} (optional)</label>
+                <input type="url" id="cert-verify-url" placeholder="https://..."
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">External verification link</p>
+                <p class="text-xs text-gray-500 mt-1">${isInternship ? 'LinkedIn post, portfolio project, etc.' : 'External verification link'}</p>
             </div>
             
             <div class="flex gap-4 pt-4">
@@ -1714,8 +1873,8 @@ function addCertificate() {
                     class="flex-1 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-all">
-                    <i class="fas fa-plus mr-2"></i>Add Certificate
+                <button type="submit" class="flex-1 px-6 py-3 ${isInternship ? 'bg-blue-600 hover:bg-blue-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white rounded-lg transition-all">
+                    <i class="fas fa-${isInternship ? 'briefcase' : 'certificate'} mr-2"></i>${buttonText}
                 </button>
             </div>
         </form>
@@ -1723,78 +1882,121 @@ function addCertificate() {
     modal.classList.remove('hidden');
 }
 
-function editCertificate(id) {
-    console.log('editCertificate called with ID:', id, 'Type:', typeof id);
-    console.log('Total certificates loaded:', portfolioData.certificates?.length);
-    console.log('Available certificates:', portfolioData.certificates?.map(c => ({ id: c.id, name: c.name })));
+// Toggle Pin to Top Functionality
+async function togglePin(id, pinStatus) {
+    try {
+        showToast('Updating pin status...', 'info');
+        const supabase = getSupabase();
+        
+        const { error } = await supabase
+            .from('certificates')
+            .update({ pin_to_top: pinStatus })
+            .eq('id', id);
+            
+        if (error) throw error;
+        
+        // Update local data
+        const cert = portfolioData.certificates.find(c => c.id == id);
+        if (cert) {
+            cert.pin_to_top = pinStatus;
+        }
+        
+        showToast(`${pinStatus ? '📌 Pinned to top' : '📍 Unpinned'}`, 'success');
+        renderCertificates(); // Re-render to show new order
+    } catch (error) {
+        console.error('Error toggling pin:', error);
+        showToast('Error updating pin status: ' + error.message, 'error');
+    }
+}
+
+function editCertification(id) {
+    console.log('editCertification called with ID:', id);
     
-    // Ensure we have certificates data
-    if (!portfolioData.certificates || portfolioData.certificates.length === 0) {
-        console.error('No certificates loaded. Portfolio data:', portfolioData);
-        showToast('No certificates loaded. Refreshing...', 'error');
-        loadAllData();
+    // Find certification by ID
+    const cert = portfolioData.certificates.find(c => c.id == id);
+    if (!cert) {
+        showToast('Certification not found. Please refresh the page.', 'error');
         return;
     }
     
-    // Find certificate by ID - try both number and string comparison
-    let cert = portfolioData.certificates.find(c => c.id == id);
-    
-    // If not found, try with strict number conversion
-    if (!cert) {
-        cert = portfolioData.certificates.find(c => Number(c.id) === Number(id));
-    }
-    
-    // If still not found, list all IDs for debugging
-    if (!cert) {
-        console.error('Certificate not found. Searching ID:', id);
-        console.error('Available IDs:', portfolioData.certificates.map(c => ({ id: c.id, type: typeof c.id })));
-        showToast('Certificate not found. Please refresh the page.', 'error');
-        return;
-    }
-    
-    console.log('Found certificate:', cert);
+    const isInternship = cert.type === 'internship';
+    const title = isInternship ? 'Edit Internship' : 'Edit Certificate';
+    const nameLabel = isInternship ? 'Internship Title' : 'Certificate Name';
+    const orgLabel = isInternship ? 'Company/Organization' : 'Issuing Organization';
+    const dateLabel = isInternship ? 'Start Date' : 'Issue Date';
+    const fileLabel = isInternship ? 'Certificate/Document' : 'Certificate File';
+    const urlLabel = isInternship ? 'LinkedIn/Portfolio URL' : 'Verification URL';
     
     const modal = document.getElementById('modal');
-    document.getElementById('modal-title').textContent = 'Edit Certificate';
+    document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-content').innerHTML = `
-        <form onsubmit="saveCertificate(event, '${id}')" class="space-y-4">
+        <form onsubmit="saveCertification(event, '${id}', '${cert.type || 'certificate'}')" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium mb-2">Certificate Name *</label>
+                <label class="block text-sm font-medium mb-2">${nameLabel} *</label>
                 <input type="text" id="cert-name" value="${(cert.name || cert.title || '').replace(/"/g, '&quot;')}" required
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Title *</label>
-                <input type="text" id="cert-title" value="${(cert.title || cert.name || '').replace(/"/g, '&quot;')}" required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium mb-2">Issuing Organization *</label>
+                <label class="block text-sm font-medium mb-2">${orgLabel} *</label>
                 <input type="text" id="cert-org" value="${(cert.issuing_organization || '').replace(/"/g, '&quot;')}" required
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Issue Date *</label>
-                <input type="date" id="cert-date" value="${cert.issue_date || ''}" required
-                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium mb-2">Description</label>
+                <textarea id="cert-description" rows="3"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">${(cert.description || '').replace(/"/g, '&quot;')}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">${dateLabel} *</label>
+                        <input type="date" id="cert-date" value="${cert.issue_date || ''}" required
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    ${isInternship ? `
+                        <div>
+                            <label class="block text-sm font-medium mb-2">End Date (optional)</label>
+                            <input type="date" id="cert-end-date" value="${cert.end_date || ''}"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                                placeholder="Leave blank if ongoing">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if internship is ongoing</p>
+                        </div>
+                    ` : `
+                        <div class="flex items-center">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="cert-pin" class="mr-3 rounded" ${cert.pin_to_top ? 'checked' : ''}>
+                                <span class="text-sm font-medium">📌 Pin to Top</span>
+                            </label>
+                        </div>
+                    `}
+                </div>
+                
+                ${isInternship ? `
+                    <div class="flex items-center">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="cert-pin" class="mr-3 rounded" ${cert.pin_to_top ? 'checked' : ''}>
+                            <span class="text-sm font-medium">📌 Pin to Top</span>
+                        </label>
+                    </div>
+                ` : ''}
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Certificate File (PDF/Image)</label>
-                ${cert.certificate_url ? `<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Current: <a href="${cert.certificate_url}" target="_blank" class="text-blue-600 hover:underline">View Certificate</a></p>` : ''}
+                <label class="block text-sm font-medium mb-2">${fileLabel}</label>
+                ${cert.certificate_url ? `<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Current: <a href="${cert.certificate_url}" target="_blank" class="text-blue-600 hover:underline">View File</a></p>` : ''}
                 <input type="file" id="cert-file" accept=".pdf,image/*"
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
                 <p class="text-xs text-gray-500 mt-1">Upload new file to replace current one</p>
             </div>
             
             <div>
-                <label class="block text-sm font-medium mb-2">Verification URL (optional)</label>
-                <input type="url" id="cert-verify-url" value="${cert.certificate_url || ''}" placeholder="https://verify-certificate.com/..."
+                <label class="block text-sm font-medium mb-2">${urlLabel} (optional)</label>
+                <input type="url" id="cert-verify-url" value="${cert.verification_url || cert.certificate_url || ''}" 
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">External verification link (if available)</p>
             </div>
             
             <div class="flex gap-4 pt-4">
@@ -1811,7 +2013,7 @@ function editCertificate(id) {
     modal.classList.remove('hidden');
 }
 
-async function saveCertificate(e, id) {
+async function saveCertification(e, id, type = 'certificate') {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.innerHTML;
@@ -1821,78 +2023,89 @@ async function saveCertificate(e, id) {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
         
         const name = document.getElementById('cert-name').value.trim();
-        const titleElement = document.getElementById('cert-title');
-        const title = titleElement ? titleElement.value.trim() : name;
         const issuing_organization = document.getElementById('cert-org').value.trim();
+        const description = document.getElementById('cert-description').value.trim();
         const issue_date = document.getElementById('cert-date').value;
-        const verifyUrlElement = document.getElementById('cert-verify-url');
-        const verify_url = verifyUrlElement ? verifyUrlElement.value.trim() : '';
+        const end_date = document.getElementById('cert-end-date')?.value || null;
+        const pin_to_top = document.getElementById('cert-pin').checked;
+        const verify_url = document.getElementById('cert-verify-url').value.trim();
         
         const data = {
             name: name,
-            title: title || name,
+            title: name, // Use name as title for consistency
             issuing_organization: issuing_organization,
-            issue_date: issue_date
+            description: description || null,
+            issue_date: issue_date,
+            end_date: end_date || null,
+            pin_to_top: pin_to_top,
+            type: type,
+            verification_url: verify_url || null
         };
         
-        // Handle certificate file upload
+        // Handle file upload
         const certFileElement = document.getElementById('cert-file');
         const certFile = certFileElement ? certFileElement.files[0] : null;
         if (certFile) {
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading certificate...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading file...';
             const uploadResult = await uploadFile(certFile, 'certificates');
             if (uploadResult.success) {
                 data.certificate_url = uploadResult.url;
                 // Delete old file if updating
                 if (id) {
-                    const oldCert = portfolioData.certificates.find(c => c.id === id);
+                    const oldCert = portfolioData.certificates.find(c => c.id == id);
                     if (oldCert && oldCert.certificate_url && oldCert.certificate_url.includes('portfolio/')) {
                         const oldPath = oldCert.certificate_url.split('portfolio/')[1];
                         await deleteFile(oldPath);
                     }
                 }
             } else {
-                throw new Error('Failed to upload certificate: ' + uploadResult.error);
+                throw new Error('Failed to upload file: ' + uploadResult.error);
             }
-        } else if (verify_url) {
-            // If no file uploaded but verification URL provided, use it
-            data.certificate_url = verify_url;
         }
         
+        const supabase = getSupabase();
+        
         if (id) {
+            // Update existing
             const { error } = await supabase.from('certificates').update(data).eq('id', id);
             if (error) throw error;
-            const index = portfolioData.certificates.findIndex(c => c.id === id);
+            
+            const index = portfolioData.certificates.findIndex(c => c.id == id);
             if (index !== -1) {
                 portfolioData.certificates[index] = { ...portfolioData.certificates[index], ...data };
             }
-            showToast('Certificate updated successfully!', 'success');
+            
+            showToast(`${type === 'internship' ? 'Internship' : 'Certificate'} updated successfully!`, 'success');
         } else {
+            // Create new
             const { data: newCert, error } = await supabase.from('certificates').insert([data]).select();
             if (error) throw error;
+            
             portfolioData.certificates.unshift(newCert[0]);
-            showToast('Certificate added successfully!', 'success');
+            showToast(`${type === 'internship' ? 'Internship' : 'Certificate'} added successfully!`, 'success');
         }
+        
         document.getElementById('modal').classList.add('hidden');
         renderCertificates();
         renderDashboard();
     } catch (error) {
-        console.error('Error saving certificate:', error);
+        console.error('Error saving certification:', error);
         showToast('Error: ' + error.message, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
     }
 }
 
-async function deleteCertificate(id) {
-    if (!confirm('Are you sure you want to delete this certificate?')) return;
+async function deleteCertification(id) {
+    if (!confirm('Are you sure you want to delete this certification/internship?')) return;
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('certificates').delete().eq('id', id);
         if (error) throw error;
-        portfolioData.certificates = portfolioData.certificates.filter(c => c.id !== id);
+        portfolioData.certificates = portfolioData.certificates.filter(c => c.id != id);
         renderCertificates();
         renderDashboard();
-        showToast('Certificate deleted successfully!', 'success');
+        showToast('Successfully deleted!', 'success');
     } catch (error) {
         showToast('Error: ' + error.message, 'error');
     }
@@ -1901,6 +2114,7 @@ async function deleteCertificate(id) {
 // ==================== MESSAGE FUNCTIONS ====================
 async function markAsRead(id) {
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('contact_messages').update({ read: true }).eq('id', id);
         if (error) throw error;
         const msg = portfolioData.messages.find(m => m.id === id);
@@ -1916,6 +2130,7 @@ async function markAsRead(id) {
 async function deleteMessage(id) {
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {
+        const supabase = getSupabase();
         const { error } = await supabase.from('contact_messages').delete().eq('id', id);
         if (error) throw error;
         portfolioData.messages = portfolioData.messages.filter(m => m.id !== id);

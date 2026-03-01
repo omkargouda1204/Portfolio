@@ -4,8 +4,6 @@
   "description": "Modern portfolio website with Supabase backend",
   "main": "index.html",
   "scripts": {
-    "build:netlify": "node build-script.js",
-    "start": "node email-service.js",
     "dev": "python -m http.server 8000"
   },
   "keywords": [

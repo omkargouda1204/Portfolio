@@ -1082,13 +1082,104 @@ button, a.btn, .button {
 }
 
 /* Adjusted styles for certificates grid */
-#certificates-grid {
-    overflow: hidden; /* Remove scrollbars */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjust layout for better responsiveness */
-    gap: 2rem; /* Increase spacing between items */
+/* ===  Certificate & Project grid overrides === */
+#certificates-grid,
+#projects-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 2.5rem !important;
 }
 
-.certificate-image {
-    height: 300px !important; /* Increase card size */
-    object-fit: cover; /* Ensure images fit nicely */
+@media (max-width: 1023px) {
+    #certificates-grid,
+    #projects-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.75rem !important;
+    }
+}
+
+@media (max-width: 639px) {
+    #certificates-grid,
+    #projects-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem !important;
+    }
+}
+
+/* === Certificate card media area === */
+.cert-media-box {
+    height: 260px;
+    background: #f3f4f6;
+    overflow: hidden;
+    position: relative;
+}
+.dark .cert-media-box {
+    background: #111827;
+}
+
+/* Image: contain so full cert is visible without clipping */
+.cert-media-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #fff;
+}
+.dark .cert-media-img {
+    background: #1f2937;
+}
+
+/* Fallback gradient placeholder */
+.cert-media-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* PDF: absolutely position iframe 2× size, scale to 50% — zero scrollbars */
+.cert-pdf-wrapper {
+    width: 100%;
+    height: 260px;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+}
+.cert-pdf-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    border: none;
+    transform: scale(0.5);
+    transform-origin: 0 0;
+    pointer-events: none;
+    /* Hide scrollbars in all browsers */
+    overflow: hidden;
+}
+/* Hide webkit scrollbars inside iframe (Chrome/Safari/Edge) */
+.cert-pdf-frame::-webkit-scrollbar { display: none; }
+
+/* Responsive cert media heights */
+@media (max-width: 479px) {
+    .cert-media-box,
+    .cert-pdf-wrapper { height: 210px; }
+    .cert-pdf-frame { height: 420px; width: 200%; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+    .cert-media-box,
+    .cert-pdf-wrapper { height: 230px; }
+    .cert-pdf-frame { height: 460px; width: 200%; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .cert-media-box,
+    .cert-pdf-wrapper { height: 250px; }
+    .cert-pdf-frame { height: 500px; width: 200%; }
+}
+@media (min-width: 1024px) {
+    .cert-media-box,
+    .cert-pdf-wrapper { height: 270px; }
+    .cert-pdf-frame { height: 540px; width: 200%; }
 }

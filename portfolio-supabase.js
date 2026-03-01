@@ -117,13 +117,29 @@ async function initializeApp() {
 async function loadAllData() {
     try {
         console.log('Loading data from Supabase...');
-        
-        // Get Supabase client
+
         const supabaseClient = getSupabaseClient();
-        
+
         if (!supabaseClient) {
             console.error('❌ Supabase client not initialized');
             return;
+        }
+
+        // Quick connection check with 7s timeout before loading all data
+        const connectCheck = await Promise.race([
+            supabaseClient.from('profile').select('count').limit(1),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 7000))
+        ]).catch(err => ({ error: err }));
+
+        if (connectCheck.error) {
+            const msg = connectCheck.error.message || '';
+            if (msg === 'timeout' || msg.includes('fetch') || msg.includes('network')) {
+                console.error('💤 Supabase project appears PAUSED or unreachable.');
+                console.error('👉 Fix: https://supabase.com/dashboard → Restore your project');
+                const banner = document.getElementById('db-offline-banner');
+                if (banner) banner.classList.remove('hidden');
+                return; // Stop loading, don't hang
+            }
         }
 
         // Load Profile
@@ -613,7 +629,7 @@ async function renderProjects() {
                 </div>
             `}
             <div class="p-6">
-                ${project.featured ? '<span class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs mb-3">⭐ Featured</span>' : ''}
+                ${project.featured && localStorage.getItem('showFeaturedBadge') !== 'false' ? '<span class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs mb-3">⭐ Featured</span>' : ''}
                 <h3 class="text-2xl font-bold mb-3 text-gray-800 dark:text-white">${project.title}</h3>
                 <p class="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">${project.description || ''}</p>
                 
@@ -717,10 +733,10 @@ function renderEducation() {
     console.log('✅ Education rendered:', education.length);
 }
 
-// Render Certificates Section
+// Render Certifications & Internships Section
 async function renderCertificates() {
-    const certificates = portfolioData.certificates;
-    if (!certificates || certificates.length === 0) return;
+    const certifications = portfolioData.certificates;
+    if (!certifications || certifications.length === 0) return;
 
     const certificatesGrid = document.getElementById('certificates-grid');
     if (!certificatesGrid) return;
@@ -730,10 +746,17 @@ async function renderCertificates() {
         return;
     }
 
-    // Generate signed URLs for ALL certificates (required for private bucket)
-    console.log('🔐 Generating signed URLs for', certificates.length, 'certificates...');
+    // Sort certifications: pinned first, then by date
+    const sortedCertifications = [...certifications].sort((a, b) => {
+        if (a.pin_to_top && !b.pin_to_top) return -1;
+        if (!a.pin_to_top && b.pin_to_top) return 1;
+        return new Date(b.issue_date) - new Date(a.issue_date);
+    });
+
+    // Generate signed URLs for ALL certifications
+    console.log('🔐 Generating signed URLs for', sortedCertifications.length, 'certifications...');
     
-    const certificatesWithUrls = await Promise.all(certificates.map(async cert => {
+    const certificationsWithUrls = await Promise.all(sortedCertifications.map(async cert => {
         const certPath = cert.certificate_url || cert.certificate_file;
         const imagePath = cert.image_url;
         
@@ -777,63 +800,101 @@ async function renderCertificates() {
         return { ...cert, signedUrl: signedCertUrl, signedImageUrl };
     }));
 
-    certificatesGrid.innerHTML = certificatesWithUrls.map(cert => {
+    certificatesGrid.innerHTML = certificationsWithUrls.map(cert => {
         const issueDate = new Date(cert.issue_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
         const certUrl = cert.signedUrl;
         const imageUrl = cert.signedImageUrl;
         
-        // Use certificate PDF as preview if no image is provided
-        const displayUrl = imageUrl || certUrl;
-        
+        // Determine type-specific styling
+        const isInternship = cert.type === 'internship';
+        const typeIcon = isInternship ? 'fas fa-briefcase' : 'fas fa-certificate';
+        const typeColor = isInternship ? 'text-blue-500' : 'text-yellow-500';
+        const gradientClass = isInternship 
+            ? 'from-blue-400 via-purple-500 to-indigo-500' 
+            : 'from-yellow-400 via-orange-500 to-red-500';
+        const typeLabel = isInternship ? 'Internship' : 'Certificate';
+
+        // Detect file type from stored RAW path (has real extension, before signing)
+        const rawPath = cert.certificate_url || cert.certificate_file || '';
+        const isPdfFile = /\.pdf$/i.test(rawPath);
+        const isImgFile = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(rawPath);
+        // effectiveImageUrl: prefer image_url field, fallback to certUrl if it's an image
+        const effectiveImageUrl = imageUrl || (isImgFile ? certUrl : null);
+        // effectivePdfUrl: use certUrl when it's a PDF
+        const effectivePdfUrl = isPdfFile ? certUrl : null;
+
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 hover:-translate-y-2 duration-300" data-aos="fade-up">
-                ${displayUrl ? `
-                    <!-- Certificate display with image or PDF preview - LARGER CARD -->
-                    <div class="relative h-72 sm:h-80 md:h-96 overflow-hidden">
-                        ${imageUrl ? `
-                            <!-- Has image thumbnail -->
-                            <img src="${imageUrl}" 
-                                 alt="${cert.name || cert.title}" 
-                                 class="w-full h-full object-contain bg-gray-50 dark:bg-gray-900"
-                                 onerror="this.parentElement.innerHTML='<div class=\\'h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center\\'><i class=\\'fas fa-certificate text-white text-6xl\\'></i></div>';">
-                        ` : certUrl ? `
-                            <!-- PDF preview (show in iframe) -->
-                            <iframe src="${certUrl}" 
-                                    class="w-full h-full pointer-events-none"
-                                    style="border: none;"
-                                    onerror="this.parentElement.innerHTML='<div class=\\'h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center\\'><i class=\\'fas fa-file-pdf text-white text-6xl\\'></i></div>';"></iframe>
-                        ` : ''}
-                        
-                        <!-- Certified Badge - Top Right -->
-                        <div class="absolute top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl flex items-center gap-2">
-                            <i class="fas fa-certificate"></i>
-                            <span>Certified</span>
+            <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:scale-[1.02] hover:-translate-y-1 duration-300" data-aos="fade-up">
+
+                <!-- Media Area -->
+                <div class="cert-media-box relative w-full">
+                    ${effectiveImageUrl ? `
+                        <img src="${effectiveImageUrl}"
+                             alt="${cert.name || cert.title}"
+                             class="cert-media-img"
+                             loading="lazy"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div style="display:none;" class="cert-media-fallback bg-gradient-to-br ${gradientClass}">
+                            <i class="${typeIcon} text-white text-5xl opacity-80"></i>
                         </div>
+                    ` : effectivePdfUrl ? `
+                        <div class="cert-pdf-wrapper">
+                            <iframe src="${effectivePdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=75"
+                                    class="cert-pdf-frame"
+                                    scrolling="no"
+                                    loading="lazy"
+                                    title="${cert.name || cert.title}"></iframe>
+                        </div>
+                    ` : `
+                        <div class="cert-media-fallback bg-gradient-to-br ${gradientClass}">
+                            <i class="${typeIcon} text-white text-5xl mb-2 opacity-90"></i>
+                            <p class="text-sm font-medium text-white opacity-80">${typeLabel}</p>
+                        </div>
+                    `}
+                    <!-- Type Badge -->
+                    <div class="absolute top-3 right-3 z-10">
+                        <span class="${typeColor} bg-white dark:bg-gray-800 px-2 py-1 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1">
+                            <i class="${typeIcon}"></i> ${typeLabel}
+                        </span>
                     </div>
-                ` : `
-                    <!-- No image or PDF, show gradient with icon -->
-                    <div class="h-72 sm:h-80 md:h-96 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center">
-                        <i class="fas fa-certificate text-white text-6xl sm:text-7xl md:text-8xl"></i>
-                    </div>
-                `}
+                </div>
                 
-                <div class="p-6 sm:p-7 md:p-8">
-                    <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-3 text-gray-800 dark:text-white">${cert.name || cert.title}</h3>
-                    <p class="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-4 flex items-center">
-                        <i class="fas fa-building mr-3 text-yellow-500 flex-shrink-0 text-lg"></i>
-                        <span>${cert.issuing_organization}</span>
+                <div class="p-4 sm:p-5">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-base sm:text-lg font-bold text-gray-800 dark:text-white flex-grow pr-2">${cert.name || cert.title}</h3>
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 flex items-center">
+                        <i class="fas fa-building mr-2 ${typeColor} flex-shrink-0"></i>
+                        <span class="truncate">${cert.issuing_organization}</span>
                     </p>
+                    
+                    ${cert.description && cert.description !== 'No description provided' ? `
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">${cert.description}</p>
+                    ` : ''}
+                    
                     <div class="flex items-center justify-between text-sm sm:text-base pt-4 border-t border-gray-200 dark:border-gray-700">
                         <span class="text-gray-500 flex items-center">
-                            <i class="far fa-calendar mr-2 text-yellow-500"></i>
+                            <i class="far fa-calendar mr-2 ${typeColor}"></i>
                             <span>${issueDate}</span>
                         </span>
-                        ${certUrl ? `
-                            <a href="${certUrl}" target="_blank" 
-                               class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all duration-200">
-                                <i class="fas fa-external-link-alt"></i>
-                                <span>Open Certificate</span>
-                            </a>
+                        ${certUrl || cert.verification_url ? `
+                            <div class="flex gap-2">
+                                ${certUrl ? `
+                                    <a href="${certUrl}" target="_blank" 
+                                       class="bg-gradient-to-r ${isInternship ? 'from-blue-500 to-purple-500' : 'from-yellow-500 to-orange-500'} text-white px-3 py-1 rounded-lg font-semibold flex items-center gap-1 text-xs hover:shadow-lg transition-all duration-200">
+                                        <i class="fas fa-file-alt"></i>
+                                        <span>View</span>
+                                    </a>
+                                ` : ''}
+                                ${cert.verification_url && cert.verification_url !== certUrl ? `
+                                    <a href="${cert.verification_url}" target="_blank" 
+                                       class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg font-semibold flex items-center gap-1 text-xs transition-all duration-200">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        <span>Link</span>
+                                    </a>
+                                ` : ''}
+                            </div>
                         ` : ''}
                     </div>
                 </div>
@@ -841,11 +902,11 @@ async function renderCertificates() {
         `;
     }).join('');
 
-    // Update count
+    // Update count display
     const countEl = document.getElementById('certificates-count');
-    if (countEl) countEl.textContent = certificates.length;
+    if (countEl) countEl.textContent = certificationsWithUrls.length;
 
-    console.log('✅ Certificates rendered:', certificates.length);
+    console.log('✅ Certifications & Internships rendered:', certificationsWithUrls.length);
 }
 
 // Setup Event Listeners
