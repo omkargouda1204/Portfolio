@@ -17,17 +17,10 @@ let portfolioData = {
     education: []
 };
 
-let adminPassword = 'Admin@123';
-// Initialize admin password in localStorage if not exists
-if (!localStorage.getItem('adminPassword')) {
-    localStorage.setItem('adminPassword', adminPassword);
-} else {
-    // Update adminPassword variable with stored value
-    adminPassword = localStorage.getItem('adminPassword');
-}
+// No hardcoded password — password is stored in Supabase settings table
 
-// LOGIN
-function login(e) {
+// LOGIN — verifies password against Supabase DB
+async function login(e) {
     if (e) e.preventDefault();
     
     const pwdInput = document.getElementById('admin-password');
@@ -41,26 +34,60 @@ function login(e) {
     }
     
     const pw = pwdInput.value.trim();
-    const saved = localStorage.getItem('adminPassword') || 'Admin@123';
+    if (!pw) {
+        showToast('Please enter a password', 'error');
+        return;
+    }
     
-    console.log('Entered password:', pw);
-    console.log('Expected password:', saved);
+    // Show loading state
+    const loginBtn = document.querySelector('#login-form button[type="submit"]');
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
+    }
     
-    if (pw === saved) {
-        if (errorEl) errorEl.classList.add('hidden');
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('admin-dashboard').classList.remove('hidden');
-        showToast('Welcome to Admin Panel', 'success');
-        // Initialize UI
-        setupThemeToggle();
-        setupEventListeners();
-        loadAllData();
-    } else {
-        if (errorEl && errorText) {
-            errorText.textContent = `Wrong password! Expected: ${saved}`;
-            errorEl.classList.remove('hidden');
+    try {
+        const sb = getSupabase();
+        if (!sb) {
+            showToast('Database not connected. Cannot verify password.', 'error');
+            return;
         }
-        showToast(`Wrong password! Expected: ${saved}`, 'error');
+        
+        const { data, error } = await sb
+            .from('settings')
+            .select('value')
+            .eq('key', 'admin_password')
+            .single();
+        
+        if (error || !data) {
+            showToast('Could not fetch password from database. Check settings table.', 'error');
+            console.error('DB error:', error);
+            return;
+        }
+        
+        if (pw === data.value) {
+            if (errorEl) errorEl.classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            showToast('Welcome to Admin Panel', 'success');
+            setupThemeToggle();
+            setupEventListeners();
+            loadAllData();
+        } else {
+            if (errorEl && errorText) {
+                errorText.textContent = 'Wrong password!';
+                errorEl.classList.remove('hidden');
+            }
+            showToast('Wrong password!', 'error');
+        }
+    } catch (err) {
+        showToast('Login failed: ' + err.message, 'error');
+        console.error('Login error:', err);
+    } finally {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Access Admin Panel';
+        }
     }
 }
 
@@ -793,7 +820,7 @@ function renderSettings() {
                 <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <p class="text-sm text-blue-700 dark:text-blue-300">
                         <i class="fas fa-info-circle mr-2"></i>
-                        Current Password: <span class="font-mono font-bold">${adminPassword}</span>
+                        Password is stored securely in the database.
                     </p>
                 </div>
             </div>
@@ -2192,10 +2219,10 @@ async function changePassword(e) {
     e.preventDefault();
     const current = document.getElementById('current-password').value;
     const newPass = document.getElementById('new-password').value;
-    const confirm = document.getElementById('confirm-password').value;
+    const confirmPass = document.getElementById('confirm-password').value;
     
-    if (current !== adminPassword) {
-        showToast('Current password is incorrect!', 'error');
+    if (!current || !newPass || !confirmPass) {
+        showToast('Please fill all password fields!', 'error');
         return;
     }
     
@@ -2204,30 +2231,51 @@ async function changePassword(e) {
         return;
     }
     
-    if (newPass !== confirm) {
+    if (newPass !== confirmPass) {
         showToast('Passwords do not match!', 'error');
         return;
     }
     
-    // Update password in memory and localStorage
-    adminPassword = newPass;
-    localStorage.setItem('adminPassword', newPass);
-    
-    // Also save to Supabase settings table (cross-device persistence)
     const sb = getSupabase();
-    if (sb) {
-        try {
-            const { error } = await sb
-                .from('settings')
-                .upsert({ key: 'admin_password', value: newPass }, { onConflict: 'key' });
-            if (error) {
-                console.warn('⚠️ Could not save password to DB (table may not exist yet):', error.message);
-            } else {
-                console.log('✅ Password saved to Supabase DB');
-            }
-        } catch (err) {
-            console.warn('⚠️ DB save failed:', err.message);
+    if (!sb) {
+        showToast('Database not connected!', 'error');
+        return;
+    }
+    
+    // Verify current password against DB
+    try {
+        const { data, error } = await sb
+            .from('settings')
+            .select('value')
+            .eq('key', 'admin_password')
+            .single();
+        
+        if (error || !data) {
+            showToast('Could not verify current password from database!', 'error');
+            return;
         }
+        
+        if (current !== data.value) {
+            showToast('Current password is incorrect!', 'error');
+            return;
+        }
+    } catch (err) {
+        showToast('Error verifying password: ' + err.message, 'error');
+        return;
+    }
+    
+    // Save new password to DB
+    try {
+        const { error } = await sb
+            .from('settings')
+            .upsert({ key: 'admin_password', value: newPass, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (error) {
+            showToast('Failed to save new password: ' + error.message, 'error');
+            return;
+        }
+    } catch (err) {
+        showToast('Failed to save password: ' + err.message, 'error');
+        return;
     }
     
     // Clear form fields
@@ -2235,29 +2283,8 @@ async function changePassword(e) {
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-password').value = '';
     
-    showToast('Password changed successfully! Saved to database.', 'success');
-    
+    showToast('Password changed successfully!', 'success');
     setTimeout(() => { renderSettings(); }, 500);
-}
-
-// Load admin password from Supabase DB (runs at startup)
-async function initAdminPassword() {
-    const sb = getSupabase();
-    if (!sb) return;
-    try {
-        const { data, error } = await sb
-            .from('settings')
-            .select('value')
-            .eq('key', 'admin_password')
-            .single();
-        if (!error && data && data.value) {
-            adminPassword = data.value;
-            localStorage.setItem('adminPassword', data.value); // cache locally
-            console.log('✅ Admin password loaded from Supabase DB');
-        }
-    } catch (err) {
-        console.log('ℹ️ Using local/default password (settings table may not exist)');
-    }
 }
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -2314,6 +2341,3 @@ function showToast(msg,type='success') {
 }
 
 console.log('✅ Admin Panel loaded - All features ready!');
-
-// Load admin password from DB on startup (async, best-effort)
-initAdminPassword();
