@@ -1912,7 +1912,7 @@ async function togglePin(id, pinStatus) {
         showToast('Updating pin status...', 'info');
         const sb = getSupabase();
         
-        const { error } = await supabase
+        const { error } = await sb
             .from('certificates')
             .update({ pin_to_top: pinStatus })
             .eq('id', id);
