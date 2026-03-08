@@ -1,6 +1,19 @@
 [build]
   publish = "."
 
+# Disable Netlify's asset optimization to prevent JS bundling/minification
+# which can cause variable scope conflicts between separate script files
+[build.processing]
+  skip_processing = false
+[build.processing.js]
+  bundle = false
+  minify = false
+[build.processing.css]
+  bundle = false
+  minify = false
+[build.processing.html]
+  pretty_urls = false
+
 # Tell Netlify's secrets scanner to skip these keys.
 # SUPABASE_ANON_KEY and SUPABASE_URL are intentionally public client-side keys
 # (not service-role keys). They must be in the JS bundle for the browser to use them.

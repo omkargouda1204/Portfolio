@@ -147,37 +147,37 @@ function showSection(n) {
 async function loadAllData() {
     try {
         console.log('Loading all data...');
-        const supabase = getSupabase();
+        const sb = getSupabase();
         
         // Load Profile
-        const { data: profile } = await supabase.from('profile').select('*').single();
+        const { data: profile } = await sb.from('profile').select('*').single();
         if (profile) portfolioData.profile = profile;
         
         // Load About
-        const { data: about } = await supabase.from('about').select('*').single();
+        const { data: about } = await sb.from('about').select('*').single();
         if (about) portfolioData.about = about;
         
         // Load Projects
-        const { data: projects } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+        const { data: projects } = await sb.from('projects').select('*').order('created_at', { ascending: false });
         if (projects) portfolioData.projects = projects;
         
         // Load Skills
-        const { data: skills } = await supabase.from('skills').select('*').order('display_order');
+        const { data: skills } = await sb.from('skills').select('*').order('display_order');
         if (skills) portfolioData.skills = skills;
         
         // Load Education
-        const { data: education } = await supabase.from('education').select('*').order('start_year', { ascending: false });
+        const { data: education } = await sb.from('education').select('*').order('start_year', { ascending: false });
         if (education) portfolioData.education = education;
         
         // Load Certificates & Internships (combined)
-        const { data: certifications } = await supabase.from('certificates').select('*').order('pin_to_top', { ascending: false }).order('issue_date', { ascending: false });
+        const { data: certifications } = await sb.from('certificates').select('*').order('pin_to_top', { ascending: false }).order('issue_date', { ascending: false });
         if (certifications) {
             portfolioData.certificates = certifications;
             console.log('✅ Admin loaded certifications & internships:', certifications.length, certifications.map(c => ({ id: c.id, name: c.name || c.title, type: c.type || 'certificate' })));
         }
         
         // Load Messages
-        const { data: messages } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+        const { data: messages } = await sb.from('contact_messages').select('*').order('created_at', { ascending: false });
         if (messages) portfolioData.messages = messages;
         
         console.log('✅ All data loaded:', portfolioData);
@@ -934,8 +934,8 @@ function toggleFeaturedDisplay(enabled) {
 async function testDatabaseConnection() {
     showToast('Testing connection...', 'info');
     try {
-        const supabase = getSupabase();
-        const { data, error } = await supabase.from('profile').select('count').limit(1);
+        const sb = getSupabase();
+        const { data, error } = await sb.from('profile').select('count').limit(1);
         if (error) throw error;
         showToast('✅ Database connection successful!', 'success');
     } catch (error) {
@@ -1136,8 +1136,8 @@ async function saveProfile(e) {
             }
         }
         
-        const supabase = getSupabase();
-        const { error } = await supabase.from('profile').update(data).eq('id', portfolioData.profile.id);
+        const sb = getSupabase();
+        const { error } = await sb.from('profile').update(data).eq('id', portfolioData.profile.id);
         if (error) throw error;
         
         // Update local data
@@ -1246,8 +1246,8 @@ async function saveAbout(e) {
     };
     
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('about').update(data).eq('id', portfolioData.about.id);
+        const sb = getSupabase();
+        const { error } = await sb.from('about').update(data).eq('id', portfolioData.about.id);
         if (error) throw error;
         portfolioData.about = { ...portfolioData.about, ...data };
         document.getElementById('modal').classList.add('hidden');
@@ -1422,17 +1422,17 @@ async function saveProject(e, id) {
             data.image_url = null;
         }
         
-        const supabase = getSupabase();
+        const sb = getSupabase();
         if (id) {
             // Update
-            const { error } = await supabase.from('projects').update(data).eq('id', id);
+            const { error } = await sb.from('projects').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.projects.findIndex(p => p.id === id);
             if (index !== -1) portfolioData.projects[index] = { ...portfolioData.projects[index], ...data };
             showToast('Project updated successfully!', 'success');
         } else {
             // Insert
-            const { data: newProject, error } = await supabase.from('projects').insert([data]).select();
+            const { data: newProject, error } = await sb.from('projects').insert([data]).select();
             if (error) throw error;
             portfolioData.projects.push(newProject[0]);
             showToast('Project added successfully!', 'success');
@@ -1450,8 +1450,8 @@ async function saveProject(e, id) {
 async function deleteProject(id) {
     if (!confirm('Are you sure you want to delete this project?')) return;
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('projects').delete().eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('projects').delete().eq('id', id);
         if (error) throw error;
         portfolioData.projects = portfolioData.projects.filter(p => p.id !== id);
         renderProjects();
@@ -1571,15 +1571,15 @@ async function saveSkill(e, id) {
     };
     
     try {
-        const supabase = getSupabase();
+        const sb = getSupabase();
         if (id) {
-            const { error } = await supabase.from('skills').update(data).eq('id', id);
+            const { error } = await sb.from('skills').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.skills.findIndex(s => s.id === id);
             if (index !== -1) portfolioData.skills[index] = { ...portfolioData.skills[index], ...data };
             showToast('Skill updated successfully!', 'success');
         } else {
-            const { data: newSkill, error } = await supabase.from('skills').insert([data]).select();
+            const { data: newSkill, error } = await sb.from('skills').insert([data]).select();
             if (error) throw error;
             portfolioData.skills.push(newSkill[0]);
             showToast('Skill added successfully!', 'success');
@@ -1595,8 +1595,8 @@ async function saveSkill(e, id) {
 async function deleteSkill(id) {
     if (!confirm('Are you sure you want to delete this skill?')) return;
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('skills').delete().eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('skills').delete().eq('id', id);
         if (error) throw error;
         portfolioData.skills = portfolioData.skills.filter(s => s.id !== id);
         renderSkills();
@@ -1743,15 +1743,15 @@ async function saveEducation(e, id) {
     };
     
     try {
-        const supabase = getSupabase();
+        const sb = getSupabase();
         if (id) {
-            const { error } = await supabase.from('education').update(data).eq('id', id);
+            const { error } = await sb.from('education').update(data).eq('id', id);
             if (error) throw error;
             const index = portfolioData.education.findIndex(e => e.id === id);
             if (index !== -1) portfolioData.education[index] = { ...portfolioData.education[index], ...data };
             showToast('Education updated successfully!', 'success');
         } else {
-            const { data: newEdu, error } = await supabase.from('education').insert([data]).select();
+            const { data: newEdu, error } = await sb.from('education').insert([data]).select();
             if (error) throw error;
             portfolioData.education.unshift(newEdu[0]);
             showToast('Education added successfully!', 'success');
@@ -1767,8 +1767,8 @@ async function saveEducation(e, id) {
 async function deleteEducation(id) {
     if (!confirm('Are you sure you want to delete this education record?')) return;
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('education').delete().eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('education').delete().eq('id', id);
         if (error) throw error;
         portfolioData.education = portfolioData.education.filter(e => e.id !== id);
         renderEducation();
@@ -1883,7 +1883,7 @@ function addCertification(type = 'certificate') {
 async function togglePin(id, pinStatus) {
     try {
         showToast('Updating pin status...', 'info');
-        const supabase = getSupabase();
+        const sb = getSupabase();
         
         const { error } = await supabase
             .from('certificates')
@@ -2060,11 +2060,11 @@ async function saveCertification(e, id, type = 'certificate') {
             }
         }
         
-        const supabase = getSupabase();
+        const sb = getSupabase();
         
         if (id) {
             // Update existing
-            const { error } = await supabase.from('certificates').update(data).eq('id', id);
+            const { error } = await sb.from('certificates').update(data).eq('id', id);
             if (error) throw error;
             
             const index = portfolioData.certificates.findIndex(c => c.id == id);
@@ -2075,7 +2075,7 @@ async function saveCertification(e, id, type = 'certificate') {
             showToast(`${type === 'internship' ? 'Internship' : 'Certificate'} updated successfully!`, 'success');
         } else {
             // Create new
-            const { data: newCert, error } = await supabase.from('certificates').insert([data]).select();
+            const { data: newCert, error } = await sb.from('certificates').insert([data]).select();
             if (error) throw error;
             
             portfolioData.certificates.unshift(newCert[0]);
@@ -2096,8 +2096,8 @@ async function saveCertification(e, id, type = 'certificate') {
 async function deleteCertification(id) {
     if (!confirm('Are you sure you want to delete this certification/internship?')) return;
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('certificates').delete().eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('certificates').delete().eq('id', id);
         if (error) throw error;
         portfolioData.certificates = portfolioData.certificates.filter(c => c.id != id);
         renderCertificates();
@@ -2111,8 +2111,8 @@ async function deleteCertification(id) {
 // ==================== MESSAGE FUNCTIONS ====================
 async function markAsRead(id) {
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('contact_messages').update({ read: true }).eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('contact_messages').update({ read: true }).eq('id', id);
         if (error) throw error;
         const msg = portfolioData.messages.find(m => m.id === id);
         if (msg) msg.read = true;
@@ -2127,8 +2127,8 @@ async function markAsRead(id) {
 async function deleteMessage(id) {
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {
-        const supabase = getSupabase();
-        const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+        const sb = getSupabase();
+        const { error } = await sb.from('contact_messages').delete().eq('id', id);
         if (error) throw error;
         portfolioData.messages = portfolioData.messages.filter(m => m.id !== id);
         updateUnreadCount();
@@ -2214,10 +2214,10 @@ async function changePassword(e) {
     localStorage.setItem('adminPassword', newPass);
     
     // Also save to Supabase settings table (cross-device persistence)
-    const supabase = getSupabase();
-    if (supabase) {
+    const sb = getSupabase();
+    if (sb) {
         try {
-            const { error } = await supabase
+            const { error } = await sb
                 .from('settings')
                 .upsert({ key: 'admin_password', value: newPass }, { onConflict: 'key' });
             if (error) {
@@ -2242,10 +2242,10 @@ async function changePassword(e) {
 
 // Load admin password from Supabase DB (runs at startup)
 async function initAdminPassword() {
-    const supabase = getSupabase();
-    if (!supabase) return;
+    const sb = getSupabase();
+    if (!sb) return;
     try {
-        const { data, error } = await supabase
+        const { data, error } = await sb
             .from('settings')
             .select('value')
             .eq('key', 'admin_password')
