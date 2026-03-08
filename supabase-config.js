@@ -1,9 +1,9 @@
 // Supabase Configuration for Portfolio Project
 // This replaces Firebase with Supabase SQL database and storage
-
+(function() {
 // For development/testing, you can set your Supabase credentials here:
 // Copy these from your Supabase project dashboard -> Settings -> API
-let SUPABASE_URL = 'https://ckyxqzgckwzimmdukmvl.supabase.co';
+var SUPABASE_URL = 'https://ckyxqzgckwzimmdukmvl.supabase.co';
 let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNreXhxemdja3d6aW1tZHVrbXZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODgxNDUsImV4cCI6MjA3Nzc2NDE0NX0.7Yneds1Gz92R9V9IKiJ_67fB44-5LfV3CmCoe_XBZgA';
 let STORAGE_BUCKET = 'Portfolio';
 let STORAGE_URL = 'https://ckyxqzgckwzimmdukmvl.supabase.co/storage/v1/object/public/Portfolio/';
@@ -224,3 +224,4 @@ async function testImageUrl(url) {
 }
 
 window.testImageUrl = testImageUrl;
+})();

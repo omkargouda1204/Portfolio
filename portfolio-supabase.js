@@ -1,6 +1,6 @@
 // Portfolio Website - Powered by Supabase
 // This file handles all frontend functionality for the portfolio
-
+(function() {
 // Get Supabase client from window (set by supabase-config.js)
 // Use window.supabase instead of creating a local const to ensure it's available when needed
 function getSupabaseClient() {
@@ -1148,3 +1148,4 @@ console.log('✅ Portfolio.js loaded - Powered by Supabase');
 
 // Setup auto-refresh after page load
 setTimeout(setupAutoRefresh, 5000);
+})();

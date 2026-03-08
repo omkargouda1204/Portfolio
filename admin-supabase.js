@@ -1,6 +1,6 @@
 // COMPLETE ADMIN PANEL - SUPABASE POWERED WITH FULL CRUD
 // Full featured admin panel with Add, Edit, Delete, Settings, and Messaging
-
+(function() {
 // Get Supabase client from window (set by supabase-config.js)
 // Using window.supabase directly to avoid redeclaration
 function getSupabase() {
@@ -2324,20 +2324,51 @@ function showToast(msg, type = 'success') {
 
 console.log('✅ Admin Panel Fully Loaded - All CRUD Operations Ready!');
 
-// UTILITY
-function showToast(msg,type='success') {
-    let t = document.getElementById('admin-toast');
-    if(!t) {
-        t = document.createElement('div');
-        t.id = 'admin-toast';
-        t.className = 'fixed bottom-6 right-6 z-50 transform translate-y-full transition-transform duration-300';
-        document.body.appendChild(t);
-    }
-    const cols = {success:'bg-green-500',error:'bg-red-500',warning:'bg-yellow-500',info:'bg-blue-500'};
-    const icons = {success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-    t.innerHTML = `<div class="${cols[type]||cols.success} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3 min-w-[300px]"><i class="fas ${icons[type]||icons.success} text-xl"></i><span class="font-medium">${msg}</span></div>`;
-    setTimeout(()=>t.classList.remove('translate-y-full'),100);
-    setTimeout(()=>t.classList.add('translate-y-full'),3000);
-}
-
-console.log('✅ Admin Panel loaded - All features ready!');
+// Expose all functions needed by inline HTML handlers to global scope
+window.login = login;
+window.logout = logout;
+window.showSection = showSection;
+window.loadAllData = loadAllData;
+window.renderDashboard = renderDashboard;
+window.renderProfile = renderProfile;
+window.renderAbout = renderAbout;
+window.renderProjects = renderProjects;
+window.renderSkills = renderSkills;
+window.renderEducation = renderEducation;
+window.renderCertificates = renderCertificates;
+window.renderMessages = renderMessages;
+window.renderSettings = renderSettings;
+window.editProfile = editProfile;
+window.saveProfile = saveProfile;
+window.previewProfileImage = previewProfileImage;
+window.editAbout = editAbout;
+window.saveAbout = saveAbout;
+window.addProject = addProject;
+window.editProject = editProject;
+window.saveProject = saveProject;
+window.deleteProject = deleteProject;
+window.addSkill = addSkill;
+window.editSkill = editSkill;
+window.saveSkill = saveSkill;
+window.deleteSkill = deleteSkill;
+window.addEducation = addEducation;
+window.editEducation = editEducation;
+window.saveEducation = saveEducation;
+window.deleteEducation = deleteEducation;
+window.addCertification = addCertification;
+window.editCertification = editCertification;
+window.saveCertification = saveCertification;
+window.deleteCertification = deleteCertification;
+window.togglePin = togglePin;
+window.markAsRead = markAsRead;
+window.deleteMessage = deleteMessage;
+window.replyToMessage = replyToMessage;
+window.changePassword = changePassword;
+window.testDatabaseConnection = testDatabaseConnection;
+window.setTheme = setTheme;
+window.toggleFeaturedDisplay = toggleFeaturedDisplay;
+window.showToast = showToast;
+window.setupThemeToggle = setupThemeToggle;
+window.setupEventListeners = setupEventListeners;
+window.updateUnreadCount = updateUnreadCount;
+})();
